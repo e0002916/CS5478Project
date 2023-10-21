@@ -11,19 +11,12 @@ channel.queue_declare(queue='Mir100_1')
 
 channel.basic_publish(exchange='move',
                       routing_key='Mir100_1',
+                      body='{"name": "PICKUP", "level": "0"}')
+
+input("Press Enter to continue...")
+
+channel.basic_publish(exchange='move',
+                      routing_key='Mir100_1',
                       body='{"name": "A", "level": "0"}')
-time.sleep(3)
-channel.basic_publish(exchange='move',
-                      routing_key='Mir100_1',
-                      body='{"name": "B", "level": "0"}')
-time.sleep(3)
-channel.basic_publish(exchange='move',
-                      routing_key='Mir100_1',
-                      body='{"name": "C", "level": "0"}')
-time.sleep(3)
-channel.basic_publish(exchange='move',
-                      routing_key='Mir100_1',
-                      body='{"name": "D", "level": "0"}')
-time.sleep(3)
 
 connection.close()

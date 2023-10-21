@@ -14,6 +14,7 @@ try:
         cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("B", 0, 2.5, 0)')
         cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("C", -2.5, 0, 0)')
         cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("D", 0, -2.5, 0)')
+        cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("PICKUP", -3.13, -2.66, 0)')
 
 finally:
     connection.close()

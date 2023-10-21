@@ -5,12 +5,17 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/mir/mir100/protos/Mir100.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/Parquetry.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/factory/conveyors/protos/ConveyorBelt.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/CorrugatedMetal.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/universal_robots/protos/UR10e.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/devices/robotiq/protos/Robotiq3fGripper.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/drinks/protos/Can.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.3329364061170074 0.3296261249322541 0.8834590920037197 1.7043126428667594
-  position 0.42424836829891177 -9.76963795518515 8.851280417800773
+  orientation -0.24032052101580298 0.20129709782649016 0.9495922944007736 1.461951630665357
+  position -2.4237837565413978 -7.794976853780401 2.423713465947904
 }
 TexturedBackground {
 }
@@ -21,29 +26,59 @@ RectangleArena {
   floorAppearance Parquetry {
   }
 }
+UR10e {
+  translation -3.08 -3.17 0.61
+  rotation 4.66309e-07 -7.19235e-09 1 -1.5707953071795862
+  controller "ure_can_grasper"
+  selfCollision FALSE
+  toolSlot [
+    Robotiq3fGripper {
+    }
+    DistanceSensor {
+      translation 0 0.1 0
+      rotation 0 0 1 1.570796
+    }
+  ]
+}
+Can {
+  translation -0.62 -4.4 0.68
+  mass 3
+}
+ConveyorBelt {
+  translation 1.15 -4.39 0
+  rotation 0 0 1 3.141592
+  size 8 0.7 0.6
+  appearance CorrugatedMetal {
+    textureTransform TextureTransform {
+      scale 6 3.1
+    }
+  }
+  borderHeight 0
+  speed 0.05
+}
 Mir100 {
-  hidden position_0_0 -1.289588629587467e-09
-  hidden position_0_1 1.5002881770000522e-09
-  hidden position_0_2 5.2875492033656777e-05
-  hidden position_0_3 5.27920993604327e-05
-  hidden position_0_4 4.178156255880447e-05
-  hidden position_0_5 4.171724037536043e-05
-  hidden rotation_13 -1 -6.447919463363167e-10 -6.447943147937341e-10 1.5708
-  hidden rotation_15 -1 7.501413330719932e-10 7.501440885000269e-10 1.5708
-  hidden rotation_17 0 0 1 5.287549337507421e-05
-  hidden position_17_0 -0.00020425048608758563
-  hidden rotation_18 -0.999999989570473 -0.00010212486720744309 -0.0001021252423337155 1.570800010429527
-  hidden rotation_20 0 0 1 5.2792103401499804e-05
-  hidden position_20_0 -0.00019894413735754843
-  hidden rotation_21 -0.999999990105344 -9.947170264197737e-05 -9.947206802261414e-05 1.5708000098946548
-  hidden rotation_23 0 0 1 4.178155929082267e-05
-  hidden position_23_0 1.4878927595563407e-05
-  hidden rotation_24 -0.9999999999446546 7.439436470881012e-06 7.4394637975072105e-06 1.570800000055345
-  hidden rotation_26 0 0 1 4.1717237227172816e-05
-  hidden position_26_0 2.0185256195133217e-05
-  hidden rotation_27 -0.9999999998981394 1.0092591024656307e-05 1.009262809688125e-05 1.5708000001018605
-  translation -1.1929015713008084e-06 9.467492330052143e-07 -0.010423753754135012
-  rotation -0.017170104015382635 0.9998525804889355 6.940977994890513e-05 0.006239707224229301
+  hidden position_0_0 -7.752136372079631e-07
+  hidden position_0_1 -1.8971034341670222e-07
+  hidden position_0_2 0.0828787467038899
+  hidden position_0_3 0.00892026346539107
+  hidden position_0_4 -0.007928547645924499
+  hidden position_0_5 -0.007523745910280448
+  hidden rotation_13 -0.9999999999998497 -3.8760539484721367e-07 -3.8760681860394276e-07 1.57080000000015
+  hidden rotation_15 -0.999999999999991 -9.485482328648967e-08 -9.485517170835053e-08 1.570800000000009
+  hidden rotation_17 0 0 1 0.08287874670389106
+  hidden position_17_0 0.0042810956974837465
+  hidden rotation_18 -0.9999954180892326 0.0021405334475917315 0.0021405413102245537 1.570804581921263
+  hidden rotation_20 0 0 1 0.008920263465412283
+  hidden position_20_0 0.0022433778602925156
+  hidden rotation_21 -0.9999987418198847 0.0011216838691078359 0.0011216879892903188 1.5708012581809054
+  hidden rotation_23 0 0 -1 0.007928547645904506
+  hidden position_23_0 0.022320545735915076
+  hidden rotation_24 -0.9998754616927893 0.011159305304969783 0.01115934629546224 1.5709245460623982
+  hidden rotation_26 0 0 -1 0.007523745910262156
+  hidden position_26_0 0.02301301330466572
+  hidden rotation_27 -0.9998676153968682 0.01150544888505462 0.011505491147005772 1.5709323933663262
+  translation 0.0001512900428346023 0.0020936268439339305 -0.010423736307437342
+  rotation -0.037860703313415754 0.9235092949263706 0.38170295954997696 0.006750801384441423
   name "Mir100_1"
   controller "waypoint_follow_controller"
   bodySlot [

@@ -190,7 +190,7 @@ class WaypointFollower:
 
     def run(self):
         while self.robot.step(self.timestep) != -1:
-            time.sleep(1.0 / self.gps_update_hz)
+            pass
 
 
 robot = WaypointFollower(model_angle_offset=90.0)

@@ -5,6 +5,6 @@ sceneTreePerspectives: 000000ff00000001000000030000001c000000c0000000fa010000000
 maximizedDockId: -1
 centralWidgetVisible: 1
 orthographicViewHeight: 1
-textFiles: 0 "../../../../usr/local/webots/projects/robots/mir/mir100/controllers/keyboard_control/keyboard_control.c"
+textFiles: 0 "../../../../usr/local/webots/projects/robots/universal_robots/controllers/ure_can_grasper/ure_can_grasper.c"
 consoles: Console:All:All
-renderingDevicePerspectives: Mir100_1:depth_camera;0;0.598437;0;0
+renderingDevicePerspectives: Mir100_1:depth_camera;0;0.573438;0;0
