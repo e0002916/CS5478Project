@@ -1,0 +1,55 @@
+#VRML_SIM R2023b utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/mir/mir100/protos/Mir100.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/Parquetry.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.3329364061170074 0.3296261249322541 0.8834590920037197 1.7043126428667594
+  position 0.42424836829891177 -9.76963795518515 8.851280417800773
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 10 10
+  floorAppearance Parquetry {
+  }
+}
+Mir100 {
+  hidden position_0_0 -1.289588629587467e-09
+  hidden position_0_1 1.5002881770000522e-09
+  hidden position_0_2 5.2875492033656777e-05
+  hidden position_0_3 5.27920993604327e-05
+  hidden position_0_4 4.178156255880447e-05
+  hidden position_0_5 4.171724037536043e-05
+  hidden rotation_13 -1 -6.447919463363167e-10 -6.447943147937341e-10 1.5708
+  hidden rotation_15 -1 7.501413330719932e-10 7.501440885000269e-10 1.5708
+  hidden rotation_17 0 0 1 5.287549337507421e-05
+  hidden position_17_0 -0.00020425048608758563
+  hidden rotation_18 -0.999999989570473 -0.00010212486720744309 -0.0001021252423337155 1.570800010429527
+  hidden rotation_20 0 0 1 5.2792103401499804e-05
+  hidden position_20_0 -0.00019894413735754843
+  hidden rotation_21 -0.999999990105344 -9.947170264197737e-05 -9.947206802261414e-05 1.5708000098946548
+  hidden rotation_23 0 0 1 4.178155929082267e-05
+  hidden position_23_0 1.4878927595563407e-05
+  hidden rotation_24 -0.9999999999446546 7.439436470881012e-06 7.4394637975072105e-06 1.570800000055345
+  hidden rotation_26 0 0 1 4.1717237227172816e-05
+  hidden position_26_0 2.0185256195133217e-05
+  hidden rotation_27 -0.9999999998981394 1.0092591024656307e-05 1.009262809688125e-05 1.5708000001018605
+  translation -1.1929015713008084e-06 9.467492330052143e-07 -0.010423753754135012
+  rotation -0.017170104015382635 0.9998525804889355 6.940977994890513e-05 0.006239707224229301
+  name "Mir100_1"
+  controller "waypoint_follow_controller"
+  bodySlot [
+    Compass {
+    }
+    GPS {
+    }
+  ]
+}

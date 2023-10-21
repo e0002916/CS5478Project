@@ -1,0 +1,14 @@
+[Unit]
+Description=
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/rqlited -http-addr 127.0.0.1:4001 -raft-addr 127.0.0.1:4002 /tmp/node.1
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGTERM
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

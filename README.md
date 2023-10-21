@@ -1,10 +1,17 @@
 # CS5478Project
 
+### Pre-Requisites
 ```
-https://github.com/rqlite/rqlite
-https://unity.com/download
-https://docs.ros.org/en/humble/Installation.html
+https://github.com/rqlite/rqlite/releases
+https://github.com/cyberbotics/webots
+https://www.rabbitmq.com/install-debian.html
 
-https://github.com/lge-ros2/cloisim
-https://github.com/lge-ros2/cloisim/wiki/Build-Guide
+pip install git+https://github.com/rqlite/pyrqlite.git
+pip install pika
+```
+
+### Setup
+```
+sudo systemctl start rabbitmq-server
+sudo systemctl start rqlited
 ```
