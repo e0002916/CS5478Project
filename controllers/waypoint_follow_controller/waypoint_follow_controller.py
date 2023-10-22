@@ -79,11 +79,11 @@ class WaypointFollower:
     def _message_queue_cb(self, ch, method, properties, body):
         msg_json = body.decode('utf8').replace("'", '"')
         msg = json.loads(msg_json)
-        logging.info(f"Received Move: {msg}")
+        logging.debug(f"Received Move: {msg}")
         if "name" in msg.keys() and "level" in msg.keys():
             if msg["level"] == self.level:
                 self.move_queue.append(msg["name"])
-                logging.info(f"Updated Move Queue: {self.move_queue}")
+                logging.debug(f"Updated Move Queue: {self.move_queue}")
             else:
                 logging.error(f"Robot on Wrong Level.")
         else:
@@ -103,7 +103,7 @@ class WaypointFollower:
     def _log_state(self):  
         while True:
             if self._gps_is_working():
-                logging.info(f"{self.robot.name} {self.state} {self.gps.getValues()}, {self._get_bearing_deg()}")
+                logging.debug(f"{self.robot.name} {self.state} {self.gps.getValues()}, {self._get_bearing_deg()}")
             time.sleep(1.0 / self.gps_update_hz)
 
     def _process_move_queue(self):  
@@ -113,7 +113,7 @@ class WaypointFollower:
                 self.state = RobotState.MOVING
                 if self.goto(landmark):
                     self.move_queue.pop(0)
-                    logging.info(f"Remaining Waypoints: {self.move_queue}")
+                    logging.debug(f"Remaining Waypoints: {self.move_queue}")
             else:
                 self.state = RobotState.STOPPED
 
@@ -179,7 +179,7 @@ class WaypointFollower:
         if self._gps_is_working():
             dest = self._get_landmark(landmark)
             if dest is None:
-                logging.info(f"Destination {landmark} does not exist. Considering it done.")
+                logging.error(f"Destination {landmark} does not exist. Considering it done.")
                 return True 
             self._drive_to(dest['x'], dest['y'])
             return True
