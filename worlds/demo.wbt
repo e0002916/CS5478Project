@@ -9,26 +9,26 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/CorrugatedMetal.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/universal_robots/protos/UR10e.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/devices/robotiq/protos/Robotiq3fGripper.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/drinks/protos/Can.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.24032052101580298 0.20129709782649016 0.9495922944007736 1.461951630665357
-  position -2.4237837565413978 -7.794976853780401 2.423713465947904
+  orientation -0.20822264243407496 0.3596994735729142 0.9095381354781887 1.1230804841795898
+  position -12.317360437260644 -23.431953267808037 10.008962696822277
 }
 TexturedBackground {
 }
 TexturedBackgroundLight {
 }
 RectangleArena {
-  floorSize 10 10
+  floorSize 20 20
   floorAppearance Parquetry {
   }
 }
 UR10e {
-  translation -3.08 -3.17 0.61
+  translation -6.23 -8.4 0.35
   rotation 4.66309e-07 -7.19235e-09 1 -1.5707953071795862
+  name "UR10e_1"
   controller "ure_can_grasper"
   selfCollision FALSE
   toolSlot [
@@ -40,14 +40,67 @@ UR10e {
     }
   ]
 }
-Can {
-  translation -0.62 -4.4 0.68
-  mass 3
+UR10e {
+  translation -1.21 -8.4 0.45
+  rotation 4.66309e-07 -7.19235e-09 1 -1.5707953071795862
+  name "UR10e_2"
+  controller "ure_can_grasper"
+  selfCollision FALSE
+  toolSlot [
+    Robotiq3fGripper {
+    }
+    DistanceSensor {
+      translation 0 0.1 0
+      rotation 0 0 1 1.570796
+    }
+  ]
+}
+UR10e {
+  translation 3.82 -8.4 0.55
+  rotation 4.66309e-07 -7.19235e-09 1 -1.5707953071795862
+  name "UR10e_3"
+  controller "ure_can_grasper"
+  selfCollision FALSE
+  toolSlot [
+    Robotiq3fGripper {
+    }
+    DistanceSensor {
+      translation 0 0.1 0
+      rotation 0 0 1 1.570796
+    }
+  ]
 }
 ConveyorBelt {
-  translation 1.15 -4.39 0
+  translation -5 -9.6 0
   rotation 0 0 1 3.141592
-  size 8 0.7 0.6
+  name "ConveyorBelt1"
+  size 2 0.7 0.3
+  appearance CorrugatedMetal {
+    textureTransform TextureTransform {
+      scale 6 3.1
+    }
+  }
+  borderHeight 0
+  speed 0.05
+}
+ConveyorBelt {
+  translation 0 -9.61 0.1
+  rotation -9.58979e-09 3.1339e-15 -1 3.14159
+  name "ConveyorBelt2"
+  size 2 0.7 0.3
+  appearance CorrugatedMetal {
+    textureTransform TextureTransform {
+      scale 6 3.1
+    }
+  }
+  borderHeight 0
+  speed 0.05
+}
+ConveyorBelt {
+  translation 5 -9.61 0.2
+  rotation -9.58979e-09 3.1339e-15 -1 3.14159
+  name "ConveyorBelt3"
+  size 2 0.7 0.3
   appearance CorrugatedMetal {
     textureTransform TextureTransform {
       scale 6 3.1
@@ -57,29 +110,33 @@ ConveyorBelt {
   speed 0.05
 }
 Mir100 {
-  hidden position_0_0 -7.752136372079631e-07
-  hidden position_0_1 -1.8971034341670222e-07
-  hidden position_0_2 0.0828787467038899
-  hidden position_0_3 0.00892026346539107
-  hidden position_0_4 -0.007928547645924499
-  hidden position_0_5 -0.007523745910280448
-  hidden rotation_13 -0.9999999999998497 -3.8760539484721367e-07 -3.8760681860394276e-07 1.57080000000015
-  hidden rotation_15 -0.999999999999991 -9.485482328648967e-08 -9.485517170835053e-08 1.570800000000009
-  hidden rotation_17 0 0 1 0.08287874670389106
-  hidden position_17_0 0.0042810956974837465
-  hidden rotation_18 -0.9999954180892326 0.0021405334475917315 0.0021405413102245537 1.570804581921263
-  hidden rotation_20 0 0 1 0.008920263465412283
-  hidden position_20_0 0.0022433778602925156
-  hidden rotation_21 -0.9999987418198847 0.0011216838691078359 0.0011216879892903188 1.5708012581809054
-  hidden rotation_23 0 0 -1 0.007928547645904506
-  hidden position_23_0 0.022320545735915076
-  hidden rotation_24 -0.9998754616927893 0.011159305304969783 0.01115934629546224 1.5709245460623982
-  hidden rotation_26 0 0 -1 0.007523745910262156
-  hidden position_26_0 0.02301301330466572
-  hidden rotation_27 -0.9998676153968682 0.01150544888505462 0.011505491147005772 1.5709323933663262
-  translation 0.0001512900428346023 0.0020936268439339305 -0.010423736307437342
+  translation -5 -6.301 0
   rotation -0.037860703313415754 0.9235092949263706 0.38170295954997696 0.006750801384441423
   name "Mir100_1"
+  controller "waypoint_follow_controller"
+  bodySlot [
+    Compass {
+    }
+    GPS {
+    }
+  ]
+}
+Mir100 {
+  translation 0 -6.301 0
+  rotation -0.037860703313415754 0.9235092949263706 0.38170295954997696 0.006750801384441423
+  name "Mir100_2"
+  controller "waypoint_follow_controller"
+  bodySlot [
+    Compass {
+    }
+    GPS {
+    }
+  ]
+}
+Mir100 {
+  translation 4.99856 -6.30111 0
+  rotation -0.037860703313415754 0.9235092949263706 0.38170295954997696 0.006750801384441423
+  name "Mir100_3"
   controller "waypoint_follow_controller"
   bodySlot [
     Compass {

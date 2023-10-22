@@ -10,11 +10,8 @@ try:
     with connection.cursor() as cursor:
         cursor.execute('DROP TABLE IF EXISTS landmarks')
         cursor.execute('CREATE TABLE landmarks (id integer not null primary key autoincrement, name text unique, x float, y float, level integer)')
-        cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("A", 2.5, 0, 0)')
-        cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("B", 0, 2.5, 0)')
-        cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("C", -2.5, 0, 0)')
-        cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("D", 0, -2.5, 0)')
-        cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("PICKUP", -3.13, -2.66, 0)')
-
+        cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("MiR100_1_start", -5, -6.3, 0)')
+        cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("MiR100_2_start", 0, -6.3, 0)')
+        cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("MiR100_3_start", 5, -6.3, 0)')
 finally:
     connection.close()
