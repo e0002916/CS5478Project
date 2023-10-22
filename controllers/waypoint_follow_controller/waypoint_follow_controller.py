@@ -11,7 +11,7 @@ import pika
 
 
 logging.basicConfig(
-    level=logging.INFO,  # Set the logging level to DEBUG
+    level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',  # Set the log message format
 )
 

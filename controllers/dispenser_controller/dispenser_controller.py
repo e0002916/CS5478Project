@@ -1,22 +1,20 @@
 """dispenser_controller controller."""
 
-from controller import Robot
+import logging
+import time
+from controller import Supervisor
 
-robot = Robot()
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',  # Set the log message format
+)
+
+robot = Supervisor()
+root_node = robot.getRoot()
+children_field = root_node.getField('children')
 
 timestep = int(robot.getBasicTimeStep())
+children_field.importMFNodeFromString(-1, 'Can { translation -4.3 -9.57 0.37, name "CAN" }')
 
-# Main loop:
-# - perform simulation steps until Webots is stopping the controller
 while robot.step(timestep) != -1:
-    # Read the sensors:
-    # Enter here functions to read sensor data, like:
-    #  val = ds.getValue()
-
-    # Process sensor data here.
-
-    # Enter here functions to send actuator commands, like:
-    #  motor.setPosition(10.0)
     pass
-
-# Enter here exit cleanup code.

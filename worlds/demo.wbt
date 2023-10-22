@@ -9,6 +9,7 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/CorrugatedMetal.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/universal_robots/protos/UR10e.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/devices/robotiq/protos/Robotiq3fGripper.proto"
+IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/drinks/protos/Can.proto"
 
 WorldInfo {
 }
@@ -141,4 +142,9 @@ Mir100 {
     GPS {
     }
   ]
+}
+Robot {
+  name "dispenser"
+  controller "dispenser_controller"
+  supervisor TRUE
 }
