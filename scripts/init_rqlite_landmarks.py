@@ -13,5 +13,6 @@ try:
         cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("MiR100_1_start", -5, -6.3, 0)')
         cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("MiR100_2_start", 0, -6.3, 0)')
         cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("MiR100_3_start", 5, -6.3, 0)')
+        cursor.execute('INSERT INTO landmarks(name, x, y, level) VALUES("UR10e_1_pickup", -6.22, -7.6, 0)')
 finally:
     connection.close()
