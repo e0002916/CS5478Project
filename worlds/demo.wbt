@@ -13,8 +13,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.20822264243407496 0.3596994735729142 0.9095381354781887 1.1230804841795898
-  position -12.317360437260644 -23.431953267808037 10.008962696822277
+  orientation -0.3099791313934639 0.2869517457747511 0.9064058879428002 1.1594694217122827
+  position -11.841001753930458 -23.962075673329686 10.185241676668792
 }
 TexturedBackground {
 }
@@ -41,7 +41,7 @@ UR10e {
   ]
 }
 UR10e {
-  translation -1.21 -8.4 0.45
+  translation -1.21 -8.4 0.35
   rotation 4.66309e-07 -7.19235e-09 1 -1.5707953071795862
   name "UR10e_2"
   controller "ure_can_grasper"
@@ -56,7 +56,7 @@ UR10e {
   ]
 }
 UR10e {
-  translation 3.82 -8.4 0.55
+  translation 3.82 -8.4 0.35
   rotation 4.66309e-07 -7.19235e-09 1 -1.5707953071795862
   name "UR10e_3"
   controller "ure_can_grasper"
@@ -83,7 +83,7 @@ ConveyorBelt {
   borderHeight 0
 }
 ConveyorBelt {
-  translation 0 -9.61 0.1
+  translation 0 -9.61 0
   rotation -9.58979e-09 3.1339e-15 -1 3.14159
   name "ConveyorBelt2"
   size 2 0.7 0.3
@@ -95,7 +95,7 @@ ConveyorBelt {
   borderHeight 0
 }
 ConveyorBelt {
-  translation 5 -9.61 0.2
+  translation 5 -9.61 0
   rotation -9.58979e-09 3.1339e-15 -1 3.14159
   name "ConveyorBelt3"
   size 2 0.7 0.3
