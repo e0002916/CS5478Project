@@ -10,12 +10,13 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/robots/universal_robots/protos/UR10e.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/devices/robotiq/protos/Robotiq3fGripper.proto"
 IMPORTABLE EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/drinks/protos/Can.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/CircleArena.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.3099791313934639 0.2869517457747511 0.9064058879428002 1.1594694217122827
-  position -11.841001753930458 -23.962075673329686 10.185241676668792
+  orientation -0.30663499745041845 0.6751703161424147 0.6709098468041245 0.993370140317412
+  position -13.263428408628258 -13.332502589261301 14.54611809681963
 }
 TexturedBackground {
 }
@@ -25,6 +26,13 @@ RectangleArena {
   floorSize 20 20
   floorAppearance Parquetry {
   }
+}
+CircleArena {
+  translation 0 5 0
+  name "dropoffArea"
+  radius 2
+  wallThickness 0.0001
+  wallHeight 0.0001
 }
 UR10e {
   translation -6.23 -8.4 0.35
@@ -146,5 +154,11 @@ Mir100 {
 Robot {
   name "dispenser"
   controller "dispenser_controller"
+  supervisor TRUE
+}
+Robot {
+  translation 0.1 4.98 0.1
+  name "dropoff"
+  controller "dropoff_controller"
   supervisor TRUE
 }

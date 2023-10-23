@@ -36,14 +36,17 @@ class WaypointFollower:
         self.gps_update_hz = gps_update_hz
         self.move_queue = []
         self.timestep = int(self.robot.getBasicTimeStep())
+        self.channel = pika.BlockingConnection(
+            pika.ConnectionParameters(self.mq_host)).channel()
 
         self._init_sim_components()
         self._init_db()
         self._init_mq()
 
         threading.Thread(target=self._log_state).start()
-        threading.Thread(target=self.channel.start_consuming).start()
         threading.Thread(target=self._process_move_queue).start()
+
+        logging.info(f"{self.robot.getName()} initialization complete.")
 
     def _init_sim_components(self):
         self.motor_left_wheel: Motor = self.robot.getDevice("middle_left_wheel_joint")
@@ -67,14 +70,13 @@ class WaypointFollower:
         )
 
     def _init_mq(self):
-        mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host))
-        self.channel = mq_connection.channel()
-        self.channel.exchange_declare(exchange='move', exchange_type='fanout')
+        self.channel.exchange_declare(exchange='move', exchange_type='direct')
         result = self.channel.queue_declare(queue=self.robot.name, exclusive=False)
         self.channel.queue_bind(exchange='move', queue=result.method.queue)
         self.channel.basic_consume(queue=result.method.queue,
                       auto_ack=True,
                       on_message_callback=self._message_queue_cb)
+        threading.Thread(target=self.channel.start_consuming).start()
 
     def _message_queue_cb(self, ch, method, properties, body):
         msg_json = body.decode('utf8').replace("'", '"')
