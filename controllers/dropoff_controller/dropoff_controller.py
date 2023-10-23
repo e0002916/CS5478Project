@@ -31,7 +31,7 @@ children_field = root_node.getField('children')
 i = 0
 while robot.step(timestep) != -1:
     if i == 100:
-        # prune_cans()
+        prune_cans()
         i = 0
     else:
         i+=1

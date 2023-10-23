@@ -13,6 +13,13 @@ channel.exchange_declare(exchange='dispense',
 channel.queue_declare(queue='Mir100_1')
 channel.queue_declare(queue='dispenser')
 
+
+channel.basic_publish(exchange='move',
+                      routing_key='Mir100_1',
+                      body='{"name": "UR10e_1_pickup", "level": "0"}')
+
+input("Press Enter to continue...")
+
 channel.basic_publish(exchange='dispense',
                       routing_key='dispenser',
                       body='{"item": "Can", "dispenserId": "ConveyorBelt1"}')
