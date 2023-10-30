@@ -106,6 +106,6 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
         return query_pipeline
 
 if __name__ == "__main__":
-    adapter = SwaggerRagAdapterForWaypointRobot(robot_name=sys.argv[1])
+    adapter = SwaggerRagAdapterForWaypointRobot(robot_name=sys.argv[1], fastapi_host=sys.argv[2], fastapi_port=int(sys.argv[3]))
     adapter.run_server()
 
