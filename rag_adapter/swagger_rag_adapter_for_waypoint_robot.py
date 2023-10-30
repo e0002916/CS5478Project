@@ -14,13 +14,26 @@ from haystack import Document
 from abstract_rag_adapter import AbstractRagAdapter
 from haystack.nodes import AnswerParser, PromptNode, PromptTemplate, BM25Retriever, TextConverter
 from haystack.pipelines import Pipeline
+import pyrqlite.dbapi2 as dbapi2
 
 class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
-    def __init__(self, robot_name:str, log_level:int=logging.INFO, fastapi_host:str='localhost', fastapi_port:int=8000, mq_host:str='localhost', mq_port=5672):
+    def __init__(self, robot_name:str, log_level:int=logging.INFO, 
+                 db_host:str='localhost', db_port:int=4001, 
+                 fastapi_host:str='localhost', fastapi_port:int=8000, 
+                 mq_host:str='localhost', mq_port=5672):
         self.robot_name = robot_name
+
+        # Conncetivity to this server
         self.app = FastAPI()
         self.fastapi_host = fastapi_host
         self.fastapi_port = fastapi_port
+
+        # Connectivity to common spatial information
+        self.db_host = db_host
+        self.db_port = db_port
+        self.db_connection = self.init_db()
+
+        # Connectivity to robot controller
         self.mq_host = mq_host
         self.mq_port = mq_port
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.mq_host, port=self.mq_port))
@@ -30,9 +43,10 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
         super().__init__(log_level)
 
     def get_query_prompt(self):
-        prompt = """Create a concise and informative answer using only code for a given question 
+        prompt = """Create a concise and informative answer for a given question 
         based solely on the given documents. You must only use information from the given documents. 
-        Do not explain. Only use code. Tailor your answer to interact with a server on {fastapi_host} and port {fastapi_port} using the curl command using HTTP.
+        If asked for code, only give code using curl command. Do not explain or give other non-code content.
+        Tailor your answer to interact with a server on {fastapi_host} and port {fastapi_port} over HTTP.
         If multiple documents contain the answer, cite those documents like ‘as stated in Document[number], Document[number], etc.’. 
         If the documents do not contain the answer to the question, say that ‘answering is not possible given the available information.’
         {{join(documents, delimiter=new_line, pattern=new_line+'Document[$idx]: $content', str_replace={{new_line: ' ', '[': '(', ']': ')'}})}}
@@ -43,6 +57,14 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
         uvicorn_config = uvicorn.Config(self.app, host=self.fastapi_host, port=self.fastapi_port)
         server = uvicorn.Server(uvicorn_config)
         server.run()
+
+    def init_db(self):
+        db_connection = dbapi2.connect(
+            host=self.db_host,
+            port=self.db_port,
+            connect_timeout = 10
+        )
+        return db_connection
 
     def init_backend_api(self):
         @self.app.put("/move/{landmark}")
@@ -57,18 +79,29 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
 
     def init_rag(self, docs_path: List[Path]):
         document_store = InMemoryDocumentStore(use_bm25=True)
-        converter = TextConverter(remove_numeric_tables=True)
+        converter = TextConverter()
         docs = [converter.convert(file_path=Path(file), meta=None)[0] for file in docs_path]
         document_store.write_documents(docs)
         self.pipeline = self.build_pipeline(document_store)
 
     def get_rag_docs(self) -> List[Path]:
-        fd, name = tempfile.mkstemp()
-        with open(fd, 'w') as f:
+        # Generate swagger API
+        fd_swagger, name_swagger = tempfile.mkstemp()
+        with open(fd_swagger, 'r+') as f:
             json.dump(self._generate_swagger(), f)
             f.flush()
 
-        return [Path(name)]
+        # Generate landmark info
+        fd_landmark, name_landmark = tempfile.mkstemp()
+        with open(fd_landmark, 'r+') as f:
+            f.write(f"Accessible Landmarks for robot {self.robot_name} are: ")
+            with self.db_connection.cursor() as cursor:
+                cursor.execute(f"SELECT * FROM landmarks")
+                for result in cursor.fetchall():
+                    f.write("* " + result['name'] + "\n")
+            f.flush()
+
+        return [Path(name_swagger), Path(name_landmark)]
 
     def init_query_api(self):
         @self.app.get("/query/")
@@ -78,7 +111,7 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
     def query(self, q: str):
         result = self.pipeline.run(query=q)
         if result:
-            return result
+            return result["answers"][0].answer
 
     def _generate_swagger(self):
        return get_openapi(
