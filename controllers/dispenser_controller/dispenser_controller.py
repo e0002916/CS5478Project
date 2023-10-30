@@ -49,6 +49,11 @@ class Dispenser:
                       on_message_callback=self._message_queue_cb)
         threading.Thread(target=self.channel.start_consuming).start()
 
+    def _get_dispenser_location(self, name: str):
+        with self.connection.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM dispenserLocation WHERE name == '{name}'")
+            return cursor.fetchone()
+
     def _generate_can_node_string(self, x, y, z):
         result = ""
         result += "Can { translation "
@@ -63,13 +68,16 @@ class Dispenser:
         msg_json = body.decode('utf8').replace("'", '"')
         msg = json.loads(msg_json)
         logging.info(f"Received Dispense: {msg}")
-        if "item" in msg.keys() and "dispenserId" in msg.keys():
-            if msg["item"] == "Can":
+        if "item" in msg.keys() and "dispenserLocation" in msg.keys():
+            dispenserLocation = msg["dispenserLocation"]
+            if msg["item"] == "coke":
                 # TODO: Use DB
-                if msg["dispenserId"] == "ConveyorBelt1":
-                    self.all_nodes.importMFNodeFromString(-1, self._generate_can_node_string(-4.3, -9.57, 0.37))
+                location = self._get_dispenser_location(dispenserLocation)
+                if location is None:
+                    logging.error(f"locationination {dispenserLocation} does not exist. Considering it done.")
+                    return False
                 else:
-                    logging.error("Unknown dispenserId requested")
+                    self.all_nodes.importMFNodeFromString(-1, self._generate_can_node_string(location['x'], location['y'], location['z']))
             else:
                 logging.error("Unknown item requested")
         else:

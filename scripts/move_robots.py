@@ -22,7 +22,7 @@ input("Press Enter to continue...")
 
 channel.basic_publish(exchange='dispense',
                       routing_key='dispenser',
-                      body='{"item": "Can", "dispenserId": "ConveyorBelt1"}')
+                      body='{"item": "Coke" "dispenserId": "ConveyorBelt1"}')
 
 input("Press Enter to continue...")
 

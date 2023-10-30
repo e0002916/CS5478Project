@@ -21,5 +21,11 @@ try:
         cursor.execute('INSERT INTO robots(name) VALUES("MiR100_1")')
         cursor.execute('INSERT INTO robots(name) VALUES("MiR100_2")')
         cursor.execute('INSERT INTO robots(name) VALUES("MiR100_3")')
+
+        cursor.execute('DROP TABLE IF EXISTS dispenserLocation')
+        cursor.execute('CREATE TABLE dispenserLocation (id integer not null primary key autoincrement, name text unique, x float, y float, z float)')
+        cursor.execute('INSERT INTO dispenserLocation(name, x, y, z) VALUES("ConveyorBelt1", -4.3, -9.57, 0.37)')
+        cursor.execute('INSERT INTO dispenserLocation(name, x, y, z) VALUES("ConveyorBelt2", 0.63, -9.59, 0.37)')
+        cursor.execute('INSERT INTO dispenserLocation(name, x, y, z) VALUES("ConveyorBelt3", 5.58, -9.59, 0.37)')
 finally:
     connection.close()

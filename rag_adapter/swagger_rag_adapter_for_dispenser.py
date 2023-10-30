@@ -14,7 +14,7 @@ from haystack.nodes import AnswerParser, PromptNode, PromptTemplate, BM25Retriev
 from haystack.pipelines import Pipeline
 import pyrqlite.dbapi2 as dbapi2
 
-class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
+class SwaggerRagAdapterForDispenser(AbstractRagAdapter):
     def __init__(self, robot_name:str, log_level:int=logging.INFO, 
                  db_host:str='localhost', db_port:int=4001, 
                  fastapi_host:str='localhost', fastapi_port:int=8000, 
@@ -44,7 +44,6 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
         prompt = """Create a concise and informative answer for a given question 
         based solely on the given documents. You must only use information from the given documents. 
         If asked for code, only give code using curl command. Do not explain or give other non-code content.
-        If more information is needed, request it
         Tailor your answer to interact with a server on {fastapi_host} and port {fastapi_port} over HTTP.
         If multiple documents contain the answer, cite those documents like ‘as stated in Document[number], Document[number], etc.’. 
         If the documents do not contain the answer to the question, say that ‘answering is not possible given the available information.’
@@ -66,11 +65,11 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
         return db_connection
 
     def init_backend_api(self):
-        @self.app.put("/move/{landmark}")
-        async def move(landmark, level:str = '0'):
-            message = {"name": landmark, "level": level}
+        @self.app.put("/dispense/{item}/{location}")
+        async def dispense(item, location):
+            message = {"item": item, "dispenserLocation": location}
             self.channel.queue_declare(queue=self.robot_name)
-            self.channel.basic_publish(exchange='move',
+            self.channel.basic_publish(exchange='dispense',
                                   routing_key=self.robot_name,
                                   body=json.dumps(message))
             # TODO: Check success of call
@@ -91,15 +90,15 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
             f.flush()
 
         # Generate landmark info
-        fd_landmark, name_landmark = tempfile.mkstemp()
-        with open(fd_landmark, 'r+') as f:
+        fd_dispenserLocation, name_dispenserLocation = tempfile.mkstemp()
+        with open(fd_dispenserLocation, 'r+') as f:
             with self.db_connection.cursor() as cursor:
-                cursor.execute(f"SELECT * FROM landmarks")
+                cursor.execute(f"SELECT * FROM dispenserLocation")
                 for result in cursor.fetchall():
-                    f.write(f"Robot {self.robot_name} can access the landmark {result['name']} + \n")
+                    f.write(f"Coke can be dispensed at {result['name']}\n")
             f.flush()
 
-        return [Path(name_swagger), Path(name_landmark)]
+        return [Path(name_swagger), Path(name_dispenserLocation)]
 
     def init_query_api(self):
         @self.app.get("/query/")
@@ -137,6 +136,6 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
         return query_pipeline
 
 if __name__ == "__main__":
-    adapter = SwaggerRagAdapterForWaypointRobot(robot_name=sys.argv[1], fastapi_host=sys.argv[2], fastapi_port=int(sys.argv[3]))
+    adapter = SwaggerRagAdapterForDispenser(robot_name="dispenser", fastapi_host=sys.argv[1], fastapi_port=int(sys.argv[2]))
     adapter.run_server()
 
