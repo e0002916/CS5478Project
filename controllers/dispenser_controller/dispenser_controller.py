@@ -15,11 +15,12 @@ logging.basicConfig(
 )
 
 class Dispenser:
-    def __init__(self, db_host:str = 'localhost', db_port:int = 4001, mq_host:str = 'localhost'):
+    def __init__(self, db_host:str = 'localhost', db_port:int = 4001, mq_host:str = 'localhost', mq_port:int = 5672):
         self.robot = Supervisor()
         self.db_host = db_host
         self.db_port = db_port
         self.mq_host = mq_host
+        self.mq_port = mq_port
         self.timestep = int(self.robot.getBasicTimeStep())
         self.channel = pika.BlockingConnection(
             pika.ConnectionParameters(self.mq_host)).channel()
@@ -39,10 +40,10 @@ class Dispenser:
         )
 
     def _init_mq(self):
-        mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host))
+        mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port))
         self.channel = mq_connection.channel()
-        self.channel.exchange_declare(exchange='dispense', exchange_type='direct')
-        result = self.channel.queue_declare(queue=self.robot.name, exclusive=False)
+        self.channel.exchange_declare(exchange='dispense', exchange_type='topic', auto_delete=True)
+        result = self.channel.queue_declare(queue=f"{self.robot.name}.dispense", exclusive=False, auto_delete=True)
         self.channel.queue_bind(exchange='dispense', queue=result.method.queue)
         self.channel.basic_consume(queue=result.method.queue,
                       auto_ack=True,

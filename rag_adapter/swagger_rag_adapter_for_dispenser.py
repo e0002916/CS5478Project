@@ -36,8 +36,8 @@ class SwaggerRagAdapterForDispenser(AbstractRagAdapter):
         self.mq_port = mq_port
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.mq_host, port=self.mq_port))
         self.channel = self.connection.channel()
-        self.channel.exchange_declare(exchange='move',
-                                      exchange_type='direct')
+        self.channel.exchange_declare(exchange='move', exchange_type='topic', auto_delete=True)
+
         super().__init__(log_level)
 
     def get_query_prompt(self):
@@ -68,9 +68,9 @@ class SwaggerRagAdapterForDispenser(AbstractRagAdapter):
         @self.app.put("/dispense/{item}/{location}")
         async def dispense(item, location):
             message = {"item": item, "dispenserLocation": location}
-            self.channel.queue_declare(queue=self.robot_name)
+            self.channel.queue_declare(queue=f"{self.robot_name}.move")
             self.channel.basic_publish(exchange='dispense',
-                                  routing_key=self.robot_name,
+                                  routing_key=f"{self.robot_name}.dispense",
                                   body=json.dumps(message))
             # TODO: Check success of call
             return True

@@ -1,4 +1,5 @@
 import logging
+import threading
 import sys
 import uvicorn
 from fastapi.openapi.utils import get_openapi
@@ -34,10 +35,20 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
         # Connectivity to robot controller
         self.mq_host = mq_host
         self.mq_port = mq_port
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.mq_host, port=self.mq_port))
-        self.channel = self.connection.channel()
-        self.channel.exchange_declare(exchange='move',
-                                      exchange_type='direct')
+        self.move_channel = pika.BlockingConnection(
+            pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()
+        self.move_channel.exchange_declare(exchange='move', exchange_type='topic', auto_delete=True)
+
+        self.state_channel = pika.BlockingConnection(
+            pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()
+        self.state_channel.exchange_declare(exchange='state', exchange_type='topic', auto_delete=True)
+        state_queue = self.state_channel.queue_declare(queue=f"{self.robot_name}.state", exclusive=False, auto_delete=False)
+        self.state_channel.queue_bind(exchange='state', queue=state_queue.method.queue)
+        self.state_channel.basic_consume(queue=state_queue.method.queue,
+                                        auto_ack=True,
+                                        on_message_callback=self._message_queue_cb)
+        threading.Thread(target=self.state_channel.start_consuming, daemon=True).start()
+
         super().__init__(log_level)
 
     def get_query_prompt(self):
@@ -69,9 +80,9 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
         @self.app.put("/move/{landmark}")
         async def move(landmark, level:str = '0'):
             message = {"name": landmark, "level": level}
-            self.channel.queue_declare(queue=self.robot_name)
-            self.channel.basic_publish(exchange='move',
-                                  routing_key=self.robot_name,
+            self.move_channel.queue_declare(queue=f"{self.robot_name}.move", auto_delete=True)
+            self.move_channel.basic_publish(exchange='move',
+                                  routing_key=f"{self.robot_name}.move",
                                   body=json.dumps(message))
             # TODO: Check success of call
             return True
@@ -118,6 +129,11 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
            description="",
            routes=self.app.routes
        )
+
+    def _message_queue_cb(self, ch, method, properties, body):
+        msg_json = body.decode('utf8').replace("'", '"')
+        msg = json.loads(msg_json)
+        print(f"Received State: {msg}")
 
     def build_pipeline(self, document_store: KeywordDocumentStore):
         retriever = BM25Retriever(document_store=document_store, top_k=5)
