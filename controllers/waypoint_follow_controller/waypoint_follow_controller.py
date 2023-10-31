@@ -48,7 +48,6 @@ class WaypointFollower:
         self.model_angle_offset_deg = model_angle_offset
         self.gps_update_hz = gps_update_hz
         self.move_queue = []
-        self.nearest_landmark = None
         self.timestep = int(self.robot.getBasicTimeStep())
         self.move_channel = pika.BlockingConnection(
             pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()
@@ -88,15 +87,14 @@ class WaypointFollower:
 
     def _init_mq(self):
         self.move_channel.exchange_declare(exchange='move', exchange_type='topic', auto_delete=True)
+        self.state_channel.exchange_declare(exchange='state', exchange_type='topic', auto_delete=True)
 
-        move_queue = self.move_channel.queue_declare(queue=f"{self.robot.name}.move", exclusive=False, auto_delete=True)
+        move_queue = self.move_channel.queue_declare(queue=f"{self.robot.name}.move", exclusive=False, auto_delete=True, arguments={'x-max-length': 1}) 
         self.move_channel.queue_bind(exchange='move', queue=move_queue.method.queue)
         self.move_channel.basic_consume(queue=move_queue.method.queue,
                                         auto_ack=True,
                                         on_message_callback=self._message_queue_cb)
         threading.Thread(target=self.move_channel.start_consuming).start()
-
-        self.state_channel.exchange_declare(exchange='state', exchange_type='topic', auto_delete=True)
 
     def _message_queue_cb(self, ch, method, properties, body):
         msg_json = body.decode('utf8').replace("'", '"')
@@ -116,7 +114,7 @@ class WaypointFollower:
 
     def _update_nearest_landmark(self):
         while True:
-            if self._gps_is_working() and self.nearest_landmark is None:
+            if self._gps_is_working() and self.state.landmark is None:
                 current_xy = self.gps.getValues()[0:2]
                 min_dist = math.inf
                 with self.connection.cursor() as cursor:
@@ -124,7 +122,7 @@ class WaypointFollower:
                     for result in cursor.fetchall():
                         current_dist = math.sqrt((current_xy[0] - result['x'])**2 + (current_xy[1] - result['y'])**2)
                         if current_dist < min_dist:
-                            self.nearest_landmark = result['name']
+                            self.state.landmark = result['name']
                             min_dist = current_dist
             time.sleep(1.0 / self.gps_update_hz)
 
@@ -222,7 +220,7 @@ class WaypointFollower:
                 logging.error(f"Destination {landmark} does not exist. Considering it done.")
                 return True 
             self._drive_to(dest['x'], dest['y'])
-            self.nearest_landmark = landmark
+            self.state.landmark = landmark
             return True
 
         else:

@@ -21,6 +21,7 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
                  fastapi_host:str='localhost', fastapi_port:int=8000, 
                  mq_host:str='localhost', mq_port=5672):
         self.robot_name = robot_name
+        self.robot_landmark = None
 
         # Conncetivity to this server
         self.app = FastAPI()
@@ -42,7 +43,7 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
         self.state_channel = pika.BlockingConnection(
             pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()
         self.state_channel.exchange_declare(exchange='state', exchange_type='topic', auto_delete=True)
-        state_queue = self.state_channel.queue_declare(queue=f"{self.robot_name}.state", exclusive=False, auto_delete=False)
+        state_queue = self.state_channel.queue_declare(queue=f"{self.robot_name}.state", exclusive=False, auto_delete=True, arguments={'x-max-length': 1})
         self.state_channel.queue_bind(exchange='state', queue=state_queue.method.queue)
         self.state_channel.basic_consume(queue=state_queue.method.queue,
                                         auto_ack=True,
@@ -86,6 +87,10 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
                                   body=json.dumps(message))
             # TODO: Check success of call
             return True
+
+        @self.app.get("/get/location")
+        async def get_location():
+            return self.robot_landmark
 
     def init_rag(self, docs_path: List[Path]):
         document_store = InMemoryDocumentStore(use_bm25=True)
@@ -133,7 +138,7 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
     def _message_queue_cb(self, ch, method, properties, body):
         msg_json = body.decode('utf8').replace("'", '"')
         msg = json.loads(msg_json)
-        print(f"Received State: {msg}")
+        self.robot_landmark = msg['landmark']
 
     def build_pipeline(self, document_store: KeywordDocumentStore):
         retriever = BM25Retriever(document_store=document_store, top_k=5)
