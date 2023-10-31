@@ -16,7 +16,7 @@ class RobotStatus(Enum):
     ERROR = 3
 
 class RobotState:
-    def __init__(self, x: float | None, y: float | None, level: float | None, landmark: str | None, status: RobotStatus):
+    def __init__(self, x: float | None, y: float | None, level: str | None, landmark: str | None, status: RobotStatus):
         self.status: RobotStatus = status
         self.x = x
         self.y = y
@@ -36,7 +36,7 @@ class WaypointFollower:
             format='%(asctime)s - %(levelname)s - %(message)s',  # Set the log message format
         )
         self.robot = Robot()
-        self.state =  RobotState(None, None, 0, None, RobotStatus.STOPPED)
+        self.state =  RobotState(None, None, "0", None, RobotStatus.STOPPED)
         self.db_host = db_host
         self.db_port = db_port
         self.mq_host = mq_host
@@ -89,7 +89,7 @@ class WaypointFollower:
         self.move_channel.exchange_declare(exchange='move', exchange_type='topic', auto_delete=True)
         self.state_channel.exchange_declare(exchange='state', exchange_type='topic', auto_delete=True)
 
-        move_queue = self.move_channel.queue_declare(queue=f"{self.robot.name}.move", exclusive=False, auto_delete=True, arguments={'x-max-length': 1}) 
+        move_queue = self.move_channel.queue_declare(queue=f"{self.robot.name}.move", exclusive=False, auto_delete=True) 
         self.move_channel.queue_bind(exchange='move', queue=move_queue.method.queue)
         self.move_channel.basic_consume(queue=move_queue.method.queue,
                                         auto_ack=True,
@@ -105,7 +105,7 @@ class WaypointFollower:
                 self.move_queue.append(msg["name"])
                 logging.debug(f"Updated Move Queue: {self.move_queue}")
             else:
-                logging.error(f"Robot on Wrong Level.")
+                logging.error(f"Robot on Wrong Level {self.state.level}")
         else:
                 logging.error(f"Move message has errors.")
 
