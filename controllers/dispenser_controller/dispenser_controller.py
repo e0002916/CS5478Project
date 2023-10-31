@@ -1,12 +1,8 @@
 """dispenser_controller controller."""
 
 import logging
-import pyrqlite.dbapi2 as dbapi2
-from random import randrange
-import json
 import threading
 import pika
-import time
 from controller import Supervisor
 
 logging.basicConfig(

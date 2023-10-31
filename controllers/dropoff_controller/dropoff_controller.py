@@ -1,5 +1,3 @@
-"""dropoff_controller controller."""
-
 import logging
 import math
 from controller import Supervisor
