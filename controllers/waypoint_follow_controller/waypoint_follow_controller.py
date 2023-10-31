@@ -7,6 +7,7 @@ import logging
 import time
 import json
 import math
+import pika 
 
 
 class Location:
@@ -30,13 +31,15 @@ class RobotState:
                            'status': str(self.status)})
 
 class WaypointFollower:
-    def __init__(self, log_level = logging.INFO, gps_update_hz:int = 1, translate_vel:float = 5.0, rotation_vel:float = 0.8, 
+    def __init__(self, log_level = logging.INFO, mq_host: str = 'localhost', mq_port: int = 5672, gps_update_hz:int = 1, translate_vel:float = 5.0, rotation_vel:float = 0.8, 
                  translation_threshold: float = 0.4, rotation_threshold: float = 3.0, model_angle_offset: float = 0.0):
         logging.basicConfig(
             level=log_level,
             format='%(asctime)s - %(levelname)s - %(message)s',  # Set the log message format
         )
         self.robot = Robot()
+        self.mq_host = mq_host
+        self.mq_port = mq_port
         self.translate_vel = translate_vel
         self.rotation_vel = rotation_vel
         self.rotate_threshold = rotation_threshold
@@ -48,11 +51,23 @@ class WaypointFollower:
         self.state: RobotState
 
         self._init_sim_components()
+        self._init_mq()
 
         threading.Thread(target=self._update_state).start()
         threading.Thread(target=self._process_move_queue).start()
 
         logging.info(f"{self.robot.getName()} initialization complete.")
+
+    def _on_move_mq(self, channel, method_frame, header_frame, body):
+        logging.info(body)
+        channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+
+    def _init_mq(self):
+        mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port))
+        channel = mq_connection.channel()
+        result = channel.queue_declare(queue=f"{self.robot.name}.move", exclusive=False, auto_delete=True)
+        channel.basic_consume(result.method.queue, self._on_move_mq)
+        threading.Thread(target=channel.start_consuming).start()
 
     def _init_sim_components(self):
         self.motor_left_wheel: Motor = self.robot.getDevice("middle_left_wheel_joint")

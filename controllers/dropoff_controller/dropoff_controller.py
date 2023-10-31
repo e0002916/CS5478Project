@@ -2,7 +2,6 @@
 
 import logging
 import math
-import time
 from controller import Supervisor
 
 logging.basicConfig(
