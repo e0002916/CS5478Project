@@ -53,15 +53,16 @@ class SwaggerRagAdapterForWaypointRobot(AbstractRagAdapter):
         super().__init__(log_level)
 
     def get_query_prompt(self):
-        prompt = """Create a concise and informative answer for a given question 
+        prompt = """ You are the robot {robot_name}.
+        Create a concise and informative answer for a given question 
         based solely on the given documents. You must only use information from the given documents. 
         If asked for code, only give code using curl command. Do not explain or give other non-code content.
-        If more information is needed, request it
+        If more information is needed, request it. 
         Tailor your answer to interact with a server on {fastapi_host} and port {fastapi_port} over HTTP.
         If multiple documents contain the answer, cite those documents like ‘as stated in Document[number], Document[number], etc.’. 
         If the documents do not contain the answer to the question, say that ‘answering is not possible given the available information.’
         {{join(documents, delimiter=new_line, pattern=new_line+'Document[$idx]: $content', str_replace={{new_line: ' ', '[': '(', ']': ')'}})}}
-        Question: {{query}}; Answer:""".format(fastapi_host=self.fastapi_host, fastapi_port=self.fastapi_port)
+        Question: {{query}}; Answer:""".format(fastapi_host=self.fastapi_host, fastapi_port=self.fastapi_port, robot_name=self.robot_name)
         return prompt
 
     def run_server(self):
