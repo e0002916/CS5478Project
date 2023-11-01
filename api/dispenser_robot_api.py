@@ -46,7 +46,7 @@ class DispenserRobotSwaggerAPI:
             self.dispense_channel.basic_publish(exchange='dispense', routing_key=f"dispense.{self.robot_name}", body=json.dumps(message))
             return True
 
-    def _generate_swagger(self):
+    def generate_swagger(self):
        return get_openapi(
            title=f"{__file__} API",
            version="1.0.0",

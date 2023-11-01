@@ -53,7 +53,11 @@ class WaypointRobotSwaggerAPI:
             self.move_channel.basic_publish(exchange='move', routing_key=f"move.{self.robot_name}", body=json.dumps(message))
             return True
 
-    def _generate_swagger(self):
+        @self.app.get("/location/")
+        async def location():
+            return self.state.toJSON()
+
+    def generate_swagger(self):
        return get_openapi(
            title=f"{__file__} API",
            version="1.0.0",
@@ -69,4 +73,3 @@ class WaypointRobotSwaggerAPI:
 if __name__ == "__main__":
     api = WaypointRobotSwaggerAPI(robot_name=sys.argv[1], fastapi_host=sys.argv[2], fastapi_port=int(sys.argv[3]), log_level=logging.INFO)
     api.run_server()
-

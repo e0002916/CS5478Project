@@ -12,7 +12,8 @@ pip install fastpi farm-haystack uvicorn[standard] pika
 
 ### Setup
 ```
+# Note, rqlite is assumed to be fixed at localhost:4001
 sudo systemctl start rabbitmq-server
 sudo systemctl start rqlited
-export PYTHONPATH=$PYTHONPATH:/usr/local/webots/lib/controller/python:/[Path-To-CS5478Project]/lib
+export PYTHONPATH=$PYTHONPATH:/usr/local/webots/lib/controller/python:/[Path-To-CS5478Project]/lib:[Path-ToCS5478Project]/api
 ```
