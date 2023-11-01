@@ -22,8 +22,7 @@ class Dispenser:
         logging.info(f"{self.robot.getName()} initialization complete.")
 
     def _init_mq(self):
-        mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port))
-        channel = mq_connection.channel()
+        channel = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()
         channel.exchange_declare(exchange='dispense', exchange_type='topic', auto_delete=True)
         result = channel.queue_declare(queue=f"dispense.{self.robot.name}", exclusive=False, auto_delete=True)
         channel.queue_bind(exchange='dispense', queue=result.method.queue)

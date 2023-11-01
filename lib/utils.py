@@ -2,10 +2,16 @@ from enum import Enum
 import json
 
 class Location:
-    def __init__(self, x: float, y: float, level: str):
-        self.x = x
-        self.y = y
-        self.level = level
+    def __init__(self, x: float|None=None, y: float|None=None, level: str|None=None, json_str: str|None=None):
+        if json_str is not None:
+            json_dict = json.loads(json_str)
+            self.x = float(json_dict['x'])
+            self.y = float(json_dict['y'])
+            self.level = json_dict['level']
+        else:
+            self.x = x
+            self.y = y
+            self.level = level
 
 class RobotStatus(Enum):
     STOPPED = 1
@@ -29,7 +35,7 @@ class RobotState:
 
     def fromJSON(self, json_str: str):
         json_dict = json.loads(json_str)
-        location = Location(json_dict['location']['x'], json_dict['location']['y'], json_dict['location']['level'])
+        location = Location(json_str=json.dumps(json_dict['location']))
         self.location = location
 
         json_status = json_dict['status']

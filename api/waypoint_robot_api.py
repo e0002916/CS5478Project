@@ -1,4 +1,5 @@
 import logging
+import json
 import threading
 import sys
 import uvicorn
@@ -30,10 +31,10 @@ class WaypointRobotSwaggerAPI:
 
         # Set up FastAPI 
         self._init_api()
+        self.move_channel = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()
 
     def _init_mq(self):
-        mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port))
-        state_channel = mq_connection.channel()
+        state_channel = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()
         state_channel.exchange_declare(exchange='state', exchange_type='topic', auto_delete=False)
         result = state_channel.queue_declare(queue=f"state.{self.robot_name}", exclusive=False, auto_delete=True)
         state_channel.queue_bind(exchange='state', queue=result.method.queue)
@@ -42,12 +43,14 @@ class WaypointRobotSwaggerAPI:
 
     def _on_state_mq(self, channel, method_frame, header_frame, body):
         self.state = RobotState(json_str=body.decode('utf-8'))
-        logging.info(self.state)
+        logging.debug(self.state)
         channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
     def _init_api(self):
         @self.app.put("/move/")
         async def move(x, y, level:str = '0'):
+            message = { "x": x, "y": y, "level": level }
+            self.move_channel.basic_publish(exchange='move', routing_key=f"move.{self.robot_name}", body=json.dumps(message))
             return True
 
     def _generate_swagger(self):

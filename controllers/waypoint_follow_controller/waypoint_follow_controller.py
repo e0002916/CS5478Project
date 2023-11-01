@@ -6,6 +6,7 @@ import logging
 import time
 import math
 import pika
+import json
 from utils import RobotState, RobotStatus, Location
 
 
@@ -38,12 +39,12 @@ class WaypointFollower:
         logging.info(f"{self.robot.getName()} initialization complete.")
 
     def _on_move_mq(self, channel, method_frame, header_frame, body):
-        logging.info(body)
+        location = Location(json_str=body)
+        self.move_queue.append(location)
         channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
     def _init_mq(self):
-        mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port))
-        move_channel = mq_connection.channel()
+        move_channel = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()
         move_channel.exchange_declare(exchange='move', exchange_type='topic', auto_delete=True)
         result = move_channel.queue_declare(queue=f"move.{self.robot.name}", exclusive=False, auto_delete=True)
         move_channel.queue_bind(exchange='move', queue=result.method.queue)
@@ -76,8 +77,7 @@ class WaypointFollower:
         return bearing
 
     def _update_state(self):  
-        mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port))
-        state_channel = mq_connection.channel()
+        state_channel = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()
         state_channel.exchange_declare(exchange='state', exchange_type='topic', auto_delete=False)
         while True:
             if self._gps_is_working():
@@ -92,6 +92,7 @@ class WaypointFollower:
             if hasattr(self, 'state'):
                 if self.move_queue:
                     location: Location = self.move_queue[0]
+                    # TODO: Account for level
                     self.state.status = RobotStatus.MOVING
                     if self._drive_to(location.x, location.y):
                         self.move_queue.pop(0)
@@ -156,5 +157,5 @@ class WaypointFollower:
             pass
 
 
-robot = WaypointFollower(model_angle_offset=90.0, log_level=logging.DEBUG)
+robot = WaypointFollower(model_angle_offset=90.0, log_level=logging.INFO)
 robot.run()
