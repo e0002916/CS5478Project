@@ -1,34 +1,13 @@
 from typing import List
 from controller import Robot
-from enum import Enum
 from controller import GPS, Motor
 import threading
 import logging
 import time
-import json
 import math
-import pika 
+import pika
+from utils import RobotState, RobotStatus, Location
 
-
-class Location:
-    def __init__(self, x: float, y: float, level: str):
-        self.x = x
-        self.y = y
-        self.level = level
-
-class RobotStatus(Enum):
-    STOPPED = 1
-    MOVING = 2
-    ERROR = 3
-
-class RobotState:
-    def __init__(self, location: Location, status: RobotStatus):
-        self.status: RobotStatus = status
-        self.location: Location = location
-
-    def toJSON(self):
-        return json.dumps({'location': {'x': self.location.x, 'y': self.location.y, 'level': self.location.level}, 
-                           'status': str(self.status)})
 
 class WaypointFollower:
     def __init__(self, log_level = logging.INFO, mq_host: str = 'localhost', mq_port: int = 5672, gps_update_hz:int = 1, translate_vel:float = 5.0, rotation_vel:float = 0.8, 
@@ -64,10 +43,12 @@ class WaypointFollower:
 
     def _init_mq(self):
         mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port))
-        channel = mq_connection.channel()
-        result = channel.queue_declare(queue=f"{self.robot.name}.move", exclusive=False, auto_delete=True)
-        channel.basic_consume(result.method.queue, self._on_move_mq)
-        threading.Thread(target=channel.start_consuming).start()
+        move_channel = mq_connection.channel()
+        move_channel.exchange_declare(exchange='move', exchange_type='topic', auto_delete=True)
+        result = move_channel.queue_declare(queue=f"move.{self.robot.name}", exclusive=False, auto_delete=True)
+        move_channel.queue_bind(exchange='move', queue=result.method.queue)
+        move_channel.basic_consume(result.method.queue, self._on_move_mq)
+        threading.Thread(target=move_channel.start_consuming).start()
 
     def _init_sim_components(self):
         self.motor_left_wheel: Motor = self.robot.getDevice("middle_left_wheel_joint")
@@ -95,11 +76,15 @@ class WaypointFollower:
         return bearing
 
     def _update_state(self):  
+        mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port))
+        state_channel = mq_connection.channel()
+        state_channel.exchange_declare(exchange='state', exchange_type='topic', auto_delete=False)
         while True:
             if self._gps_is_working():
                 gps = self.gps.getValues()
                 self.state =  RobotState(Location(gps[0], gps[1], "0"), RobotStatus.STOPPED)  # TODO: Update Level
                 logging.debug(self.state.toJSON())
+                state_channel.basic_publish(exchange='state', routing_key=f"state.{self.robot.name}", body=self.state.toJSON())
             time.sleep(1.0 / self.gps_update_hz)
 
     def _process_move_queue(self):  
@@ -171,5 +156,5 @@ class WaypointFollower:
             pass
 
 
-robot = WaypointFollower(model_angle_offset=90.0, log_level=logging.INFO)
+robot = WaypointFollower(model_angle_offset=90.0, log_level=logging.DEBUG)
 robot.run()

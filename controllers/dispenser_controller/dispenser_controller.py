@@ -1,5 +1,3 @@
-"""dispenser_controller controller."""
-
 import logging
 import threading
 import pika
@@ -26,7 +24,9 @@ class Dispenser:
     def _init_mq(self):
         mq_connection = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port))
         channel = mq_connection.channel()
-        result = channel.queue_declare(queue=f"{self.robot.name}.dispense", exclusive=False, auto_delete=True)
+        channel.exchange_declare(exchange='dispense', exchange_type='topic', auto_delete=True)
+        result = channel.queue_declare(queue=f"dispense.{self.robot.name}", exclusive=False, auto_delete=True)
+        channel.queue_bind(exchange='dispense', queue=result.method.queue)
         channel.basic_consume(result.method.queue, self._on_dispense_mq)
         threading.Thread(target=channel.start_consuming).start()
 
