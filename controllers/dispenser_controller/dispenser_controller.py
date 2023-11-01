@@ -1,4 +1,6 @@
 import logging
+import json
+import random
 import threading
 import pika
 from controller import Supervisor
@@ -15,7 +17,6 @@ class Dispenser:
         self.mq_port = mq_port
         self.timestep = int(self.robot.getBasicTimeStep())
         self.all_nodes = self.robot.getRoot().getField('children')
-        self.dispenser_counter = 0
 
         self._init_mq()
 
@@ -23,7 +24,7 @@ class Dispenser:
 
     def _init_mq(self):
         channel = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()
-        channel.exchange_declare(exchange='dispense', exchange_type='topic', auto_delete=True)
+        channel.exchange_declare(exchange='dispense', exchange_type='topic', auto_delete=False)
         result = channel.queue_declare(queue=f"dispense.{self.robot.name}", exclusive=False, auto_delete=True)
         channel.queue_bind(exchange='dispense', queue=result.method.queue)
         channel.basic_consume(result.method.queue, self._on_dispense_mq)
@@ -34,13 +35,14 @@ class Dispenser:
         result += "Can { translation "
         result += f"{x} {y} {z}"
         result += ", name "
-        result += f"\"can{self.dispenser_counter}\""
+        result += f"\"can{random.randint(0, 100)}\""
         result += "}"
-        self.dispenser_counter += 1
         return result
 
     def _on_dispense_mq(self, channel, method_frame, header_frame, body):
-        logging.info(body)
+        spawn = self.robot.getSelf().getPosition()
+        if json.loads(body)['item'].lower() == 'coke':
+            self.all_nodes.importMFNodeFromString(-1, self._generate_can_node_string(spawn[0], spawn[1], spawn[2]))
         channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
     def run(self):
