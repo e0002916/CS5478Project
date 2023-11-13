@@ -24,6 +24,7 @@ class WaypointRobotAgent(BaseAgent):
         self.robot_name = robot_name
         self.provider = "openai"
         self.API_KEY = os.environ['OPENAI_API_KEY']
+        self.swagger_prompt = None
 
         # Setup DB
         self.db_host = db_host
@@ -38,31 +39,23 @@ class WaypointRobotAgent(BaseAgent):
         self.api_backend_host = api_backend_host
         self.api_backend_port = api_backend_port
         self.api = WaypointRobotSwaggerAPI(robot_name=robot_name, fastapi_host=api_backend_host, fastapi_port=api_backend_port, log_level=log_level)
+        self.swagger_prompt = str(self.api.generate_swagger()).replace('{', '{{').replace('}', '}}')
         self.agent = self.setup_agent()
 
         # Run servers
         self.query_api = NonBlockingQueryRestAPI(self.api_query_host, self.api_query_port, self.query)
         self.api.run_server()
 
-    def get_pipeline_prompt(self):
-            return """ You are the robot {robot_name}.
-        Create a concise and informative answer for a given question based solely on the given documents. You must only use information from the given documents. 
-        Answer with python code using the requests library with a server on host {api_backend_host} and port {api_backend_port} over HTTP. 
-        The request must be valid according to any API definitions in the given documents. Only use functions from the requests library.
-        The answer must be executable with the python exec call. Do not return anything else.
-        Ensure that the python code is formatted as a single line. If you are unable to answer, respond with the empty string. Do not define new functions.
-        Question: {{query}}; Answer:""".format(api_backend_host=self.api_backend_host, api_backend_port=self.api_backend_port, robot_name=self.robot_name)
-
     def get_docs(self) -> List[Path]:
         fd_swagger, name_swagger = tempfile.mkstemp()
         with open(fd_swagger, 'r+') as f:
-            json.dump(self.api.generate_swagger(), f)
+            json.dump(self.swagger_prompt, f)
             f.flush()
 
         # Connection Details
         fd_conn, name_conn = tempfile.mkstemp()
         with open(fd_conn, 'r+') as f:
-            f.write(f"The Robot with name f{self.robot_name} has an API is hosted on server {self.api_backend_host} and port {self.api_backend_port}.")
+            f.write(f"The Robot with name f{self.robot_name} has a REST API hosted on server {self.api_backend_host} and port {self.api_backend_port}.")
             f.flush()
 
         # Naive implementation assumes robot believes it can access all waypoints
@@ -77,34 +70,33 @@ class WaypointRobotAgent(BaseAgent):
         return [Path(name_swagger), Path(name_waypoint), Path(name_conn)]
 
     def setup_agent(self):
-        codegen = self._setup_codegen_pipeline(self.get_docs())
+        swagger_codegen = self._setup_swagger_codegen_pipeline()
         executor = PythonRequestsExecutorNode()
         prompt_node = PromptNode(model_name_or_path="gpt-3.5-turbo-0301", api_key=os.environ["OPENAI_API_KEY"], stop_words=["Observation:"])
         agent = Agent(prompt_node=prompt_node)
 
         agent.add_tool(Tool(name="python_code_generator_tool", 
-                            pipeline_or_node=codegen, 
-                            description="Use this to generate python code to query information about the robot or command it.", output_variable="results"))
+                            pipeline_or_node=swagger_codegen, 
+                            description="Always use this tool first. This tool generates python code to answer an agent thought.", output_variable="results"))
 
         agent.add_tool(Tool(name="python_code_execution_tool", 
                             pipeline_or_node=executor, 
-                            description="Use this to execute python code to query information about the robot or command it.", output_variable="results"))
+                            description="Always use this after running the python_code_generator_tool. This tool executes python code to answer an agent thought. Pass as input the exact output from python_code_generator_tool.", output_variable="results"))
 
         return agent 
 
     def query(self, q: str):
         return self.agent.run(q)
 
-    def _setup_codegen_pipeline(self, docs: List[Path]):
-        document_store = InMemoryDocumentStore(use_bm25=True)
-        converter = TextConverter()
-        converted_docs = [converter.convert(file_path=Path(file), meta=None)[0] for file in docs]
-        document_store.write_documents(converted_docs)
-
-        retriever = BM25Retriever(document_store=document_store, top_k=5)
-
+    def _setup_swagger_codegen_pipeline(self):
         prompt_template = PromptTemplate(
-            prompt=self.get_pipeline_prompt(),
+            prompt="""
+            You are a python code generator. You generate python code to interact with robot {robot_name} using the following Swagger API: {swagger_prompt}.
+            The Python code should use the requests library to a server on host {api_backend_host} and port {api_backend_port} over HTTP. 
+            Generate only one executable line. Do not use assignment to any variables.
+            Query: {{query}}
+            Answer: 
+            """.format(robot_name=self.robot_name, swagger_prompt=self.swagger_prompt, api_backend_host=self.api_backend_host, api_backend_port=self.api_backend_port)
         )
 
         prompt_node = PromptNode(
@@ -114,8 +106,7 @@ class WaypointRobotAgent(BaseAgent):
         )
 
         pipeline = Pipeline()
-        pipeline.add_node(component=retriever, name="retriever", inputs=["Query"])
-        pipeline.add_node(component=prompt_node, name="prompt_node", inputs=["retriever"])
+        pipeline.add_node(component=prompt_node, name="prompt_node", inputs=["Query"])
 
         return pipeline
 

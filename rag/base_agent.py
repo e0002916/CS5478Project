@@ -52,10 +52,6 @@ class BaseAgent(ABC):
        raise NotImplementedError 
 
     @abstractmethod
-    def get_pipeline_prompt(self):
-       raise NotImplementedError 
-
-    @abstractmethod
     def get_docs(self):
        raise NotImplementedError 
 
