@@ -100,6 +100,7 @@ class WaypointFollower:
                 else:
                     self.state.status = RobotStatus.STOPPED
 
+            logging.info(self.move_queue)
             time.sleep(1.0 / self.gps_update_hz)
 
     def _rotate_to(self, x:float, y:float): 
@@ -146,7 +147,7 @@ class WaypointFollower:
             if (dist < self.translation_threshold):
                 self.motor_left_wheel.setVelocity(0.0)
                 self.motor_right_wheel.setVelocity(0.0)
-                return
+                return True
             else:
                 self.motor_left_wheel.setVelocity(self.translate_vel)
                 self.motor_right_wheel.setVelocity(self.translate_vel)
