@@ -100,7 +100,7 @@ class WaypointFollower:
                 else:
                     self.state.status = RobotStatus.STOPPED
 
-            logging.info(self.move_queue)
+            logging.debug(self.move_queue)
             time.sleep(1.0 / self.gps_update_hz)
 
     def _rotate_to(self, x:float, y:float): 

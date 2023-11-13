@@ -25,6 +25,27 @@ class PythonRequestsExecutorNode(BaseComponent):
     def run_batch(self):
         pass
 
+class SQLExecutorNode(BaseComponent):
+    outgoing_edges = 1
+    def __init__(self, db_connection):
+        self.db_connection = db_connection
+
+    def run(self, query: str):
+        with self.db_connection.cursor() as cursor:
+            cursor.execute(query)
+            results = cursor.fetchall()
+            output = ""
+            for result in results:
+                output += f"{result}\n"
+        output={
+            "results": output
+        }
+        return output
+
+    def run_batch(self):
+        pass
+
+
 class NonBlockingQueryRestAPI:
     def __init__(self, fastapi_host, fastapi_port:int, callback): 
         self.app = FastAPI()

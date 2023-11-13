@@ -1,5 +1,5 @@
 from haystack import Pipeline
-from base_agent import BaseAgent
+from base_agent import BaseAgent, SQLExecutorNode
 from haystack.agents import Agent, Tool
 from haystack.nodes import PromptNode, PromptTemplate, TextConverter
 from haystack.nodes.retriever import BM25Retriever
@@ -29,6 +29,7 @@ class WaypointRobotAgent(BaseAgent):
         # Setup DB
         self.db_host = db_host
         self.db_port = db_port
+        self.db_schemas = ""
         self.db_connection = self.init_db()
 
         # Setup API for query input
@@ -52,6 +53,11 @@ class WaypointRobotAgent(BaseAgent):
             json.dump(self.swagger_prompt, f)
             f.flush()
 
+        fd_schemas, name_schemas = tempfile.mkstemp()
+        with open(fd_schemas, 'r+') as f:
+            f.write(f"{self.db_schemas}")
+            f.flush()
+
         # Connection Details
         fd_conn, name_conn = tempfile.mkstemp()
         with open(fd_conn, 'r+') as f:
@@ -67,26 +73,59 @@ class WaypointRobotAgent(BaseAgent):
                     f.write(f"Robot {self.robot_name} can access the waypoint {result['name']} + \n")
             f.flush()
 
-        return [Path(name_swagger), Path(name_waypoint), Path(name_conn)]
+        return [Path(name_swagger), Path(name_schemas), Path(name_waypoint), Path(name_conn)]
 
     def setup_agent(self):
         swagger_codegen = self._setup_swagger_codegen_pipeline()
-        executor = PythonRequestsExecutorNode()
+        sql_codegen = self._setup_sql_codegen_pipeline()
+
+        python_executor = PythonRequestsExecutorNode()
+        sql_executor = SQLExecutorNode(self.db_connection)
         prompt_node = PromptNode(model_name_or_path="gpt-3.5-turbo-0301", api_key=os.environ["OPENAI_API_KEY"], stop_words=["Observation:"])
         agent = Agent(prompt_node=prompt_node)
 
         agent.add_tool(Tool(name="python_code_generator_tool", 
                             pipeline_or_node=swagger_codegen, 
-                            description="Always use this tool first. This tool generates python code to answer an agent thought.", output_variable="results"))
+                            description="This tool generates python code to answer an agent thought.", output_variable="results"))
 
         agent.add_tool(Tool(name="python_code_execution_tool", 
-                            pipeline_or_node=executor, 
+                            pipeline_or_node=python_executor, 
                             description="Always use this after running the python_code_generator_tool. This tool executes python code to answer an agent thought. Pass as input the exact output from python_code_generator_tool.", output_variable="results"))
+
+        agent.add_tool(Tool(name="sql_code_generator_tool", 
+                            pipeline_or_node=sql_codegen, 
+                            description="This tool generates sql queries to answer an agent thought. Use this to translate waypoint names into coordinates for use in moving robots.", output_variable="results"))
+
+        agent.add_tool(Tool(name="sql_code_execution_tool", 
+                            pipeline_or_node=sql_executor, 
+                            description="Always use this after running the sql_code_generator_tool. This tool executes SQL code to answer an agent thought. Pass as input the exact output from sql_code_generator_tool.", output_variable="results"))
+
 
         return agent 
 
     def query(self, q: str):
         return self.agent.run(q)
+
+    def _setup_sql_codegen_pipeline(self):
+        prompt_template = PromptTemplate(
+            prompt="""
+            You are an sql code generator. You generate sql code to answer queries based on understanding the following relational database SQLite Schema: {schemas}.
+            Generate only one executable line. Do not use placeholder for manual replacement. Do not add comments.
+            Query: {{query}}
+            Answer: 
+            """.format(schemas=self.db_schemas)
+        )
+
+        prompt_node = PromptNode(
+            model_name_or_path="gpt-3.5-turbo-0301",
+            api_key=self.API_KEY,
+            default_prompt_template=prompt_template
+        )
+
+        pipeline = Pipeline()
+        pipeline.add_node(component=prompt_node, name="prompt_node", inputs=["Query"])
+
+        return pipeline
 
     def _setup_swagger_codegen_pipeline(self):
         prompt_template = PromptTemplate(
@@ -116,6 +155,21 @@ class WaypointRobotAgent(BaseAgent):
             port=self.db_port,
             connect_timeout = 10
         )
+
+        with db_connection.cursor() as cursor:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            for result in tables:
+                table_name = result[0]
+                if table_name == 'sqlite_sequence': 
+                    continue
+                cursor.execute(f"SELECT sql FROM sqlite_master WHERE name='{table_name}';")
+                schema_infos = cursor.fetchall()
+                for schema_info in schema_infos:
+                    schema = schema_info[0]
+                    self.db_schemas += f"{schema}\n"
+            logging.info(self.db_schemas)
+
         return db_connection
 
 if __name__ == "__main__":
