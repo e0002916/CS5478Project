@@ -1,16 +1,11 @@
-from haystack import Pipeline
-from haystack.agents import Agent, Tool
-from haystack.nodes import PromptNode, PromptTemplate 
-from waypoint_robot_api import WaypointRobotSwaggerAPI
 import pyrqlite.dbapi2 as dbapi2
-from pathlib import Path
-from typing import List
 import logging
-from base_agent import BaseAgent, NonBlockingQueryRestAPI
-import tempfile
-import json
 import os
 import sys
+from haystack.agents import Agent 
+from haystack.nodes import PromptNode 
+from lib.base_agent import BaseAgent 
+from waypoint_robot_api import WaypointRobotSwaggerAPI
 
 class WaypointRobotAgent(BaseAgent):
     def __init__(self, robot_name:str, db_host:str, db_port: int, 
