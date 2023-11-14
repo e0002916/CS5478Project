@@ -2,9 +2,11 @@ import pyrqlite.dbapi2 as dbapi2
 import logging
 import os
 import sys
+from functools import partial
 from haystack.agents import Agent 
 from haystack.nodes import PromptNode 
-from lib.base_agent import BaseAgent 
+from base_agent import BaseAgent 
+from agent_tools import PythonRequestsGeneratorForSwaggerAPI
 from waypoint_robot_api import WaypointRobotSwaggerAPI
 
 class WaypointRobotAgent(BaseAgent):
@@ -13,16 +15,14 @@ class WaypointRobotAgent(BaseAgent):
                  api_backend_host:str, api_backend_port: int, 
                  log_level=logging.INFO):
         logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
-        super().__init__(api_query_host, api_query_port, self.query)
 
         # Initialize Robot Low Level Controller
-        api = WaypointRobotSwaggerAPI(robot_name=robot_name, fastapi_host=api_backend_host, fastapi_port=api_backend_port, log_level=log_level)
+        self.api = WaypointRobotSwaggerAPI(robot_name=robot_name, fastapi_host=api_backend_host, fastapi_port=api_backend_port, log_level=log_level)
 
         # Load configuration values
         self.robot_name = robot_name
         self.provider = "openai"
         self.API_KEY = os.environ['OPENAI_API_KEY']
-        self.swagger_prompt = None
 
         # Setup DB
         self.db_host = db_host
@@ -39,16 +39,23 @@ class WaypointRobotAgent(BaseAgent):
         self.agent = self.setup_agent()
 
         # Run server
-        api.run_server()
+        super().__init__(api_query_host, api_query_port, partial(self.query, self.agent))
+        self.api.run_server()
 
     def setup_agent(self):
         prompt_node = PromptNode(model_name_or_path="gpt-3.5-turbo-0301", api_key=os.environ["OPENAI_API_KEY"], stop_words=["Observation:"])
         agent = Agent(prompt_node=prompt_node)
 
+        agent.add_tool(
+            tool=PythonRequestsGeneratorForSwaggerAPI(
+                robot_name=self.robot_name, 
+                swagger_definitions=str(self.api.generate_swagger()), 
+                server_connection_string=f"http://{self.api_backend_host}:{self.api_backend_port}").generate_tool())
+
         return agent 
 
-    def query(self, q: str):
-        return self.agent.run(q)
+    def query(self, agent: Agent, q: str):
+        return agent.run(q)
 
     def init_db(self):
         db_connection = dbapi2.connect(
