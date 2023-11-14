@@ -1,53 +1,11 @@
 from multiprocessing import Process
 from abc import ABC, abstractmethod
-from haystack.nodes.base import BaseComponent
 from fastapi import FastAPI
-from requests import Response
 import uvicorn
-import logging
-import json
-
-
-class PythonRequestsExecutorNode(BaseComponent):
-    outgoing_edges = 1
-    def __init__(self):
-        pass
-
-    def run(self, query: str):
-        global r
-        exec("import requests; global r; r = {query}".format(query=query))
-        logging.info(r.json())
-        output={
-            "results": r.json()
-        }
-        return output
-
-    def run_batch(self):
-        pass
-
-class SQLExecutorNode(BaseComponent):
-    outgoing_edges = 1
-    def __init__(self, db_connection):
-        self.db_connection = db_connection
-
-    def run(self, query: str):
-        with self.db_connection.cursor() as cursor:
-            cursor.execute(query)
-            results = cursor.fetchall()
-            output = ""
-            for result in results:
-                output += f"{result}\n"
-        output={
-            "results": output
-        }
-        return output
-
-    def run_batch(self):
-        pass
 
 
 class NonBlockingQueryRestAPI:
-    def __init__(self, fastapi_host, fastapi_port:int, callback): 
+    def __init__(self, fastapi_host: str, fastapi_port:int, callback): 
         self.app = FastAPI()
         self.fastapi_host = fastapi_host
         self.fastapi_port = fastapi_port
@@ -68,13 +26,8 @@ class NonBlockingQueryRestAPI:
         self.proc.start()
 
 class BaseAgent(ABC):
-    @abstractmethod
-    def __init__(self):
-       raise NotImplementedError 
-
-    @abstractmethod
-    def get_docs(self):
-       raise NotImplementedError 
+    def __init__(self, fastapi_host: str, fastapi_port: int, query_callback):
+        NonBlockingQueryRestAPI(fastapi_host, fastapi_port, query_callback)
 
     @abstractmethod
     def setup_agent(self):
