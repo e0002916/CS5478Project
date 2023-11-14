@@ -17,7 +17,7 @@ class PythonRequestsGeneratorForSwaggerAPI(Tool):
             prompt="""
             You are a python code generator. You generate python code to interact with robot {robot_name} using the following Swagger API: {swagger_definitions}.
             The Python code should use the requests library to a server on hosted on {server_connection_string}.
-            Generate only one executable line. Do not use assignment to any variables.
+            Generate only one executable line. Do not assign the requests command to any variables.
             Query: {{query}}
             Answer: 
             """.format(robot_name=self.robot_name, swagger_definitions=self.swagger_definitions, server_connection_string=self.server_connection_string)
