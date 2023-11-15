@@ -13,8 +13,10 @@ class WaypointRobotAgent(BaseAgent):
     def __init__(self, robot_name:str, db_host:str, db_port: int, 
                  api_query_host:str, api_query_port: int, 
                  api_backend_host:str, api_backend_port: int, 
-                 log_level=logging.INFO):
+                 log_level=logging.INFO, train=False):
         logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
+        # Decide if we valid tool executions will save and bootstrap LLM
+        self.train = train
 
         # Initialize Robot Low Level Controller
         self.api = WaypointRobotSwaggerAPI(robot_name=robot_name, fastapi_host=api_backend_host, fastapi_port=api_backend_port, log_level=log_level)
@@ -50,16 +52,20 @@ class WaypointRobotAgent(BaseAgent):
             tool=PythonRequestsGeneratorForSwaggerAPI(
                 robot_name=self.robot_name, 
                 swagger_definitions=str(self.api.generate_swagger()), 
-                server_connection_string=f"http://{self.api_backend_host}:{self.api_backend_port}").generate_tool())
+                server_connection_string=f"http://{self.api_backend_host}:{self.api_backend_port}",
+                train=self.train).generate_tool())
 
         agent.add_tool(
             tool=SQLGeneratorForSQLite(
-                db_connection=self.db_connection).generate_tool())
+                robot_name=self.robot_name,
+                db_connection=self.db_connection,
+                train=self.train).generate_tool())
 
         return agent 
 
     def query(self, agent: Agent, q: str):
-        return agent.run(q)
+        results = agent.run(q)
+        return results
 
     def init_db(self):
         db_connection = dbapi2.connect(
@@ -75,4 +81,4 @@ if __name__ == "__main__":
         robot_name=sys.argv[1], db_host=sys.argv[2], db_port=int(sys.argv[3]),
         api_query_host=sys.argv[4], api_query_port=int(sys.argv[5]),
         api_backend_host=sys.argv[6], api_backend_port=int(sys.argv[7]), 
-        log_level=logging.INFO)
+        log_level=logging.INFO, train=False)
