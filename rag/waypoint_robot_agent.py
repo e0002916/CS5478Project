@@ -6,7 +6,7 @@ from functools import partial
 from haystack.agents import Agent 
 from haystack.nodes import PromptNode 
 from base_agent import BaseAgent 
-from agent_tools import PythonRequestsGeneratorForSwaggerAPI
+from agent_tools import PythonRequestsGeneratorForSwaggerAPI, SQLGeneratorForSQLite
 from waypoint_robot_api import WaypointRobotSwaggerAPI
 
 class WaypointRobotAgent(BaseAgent):
@@ -51,6 +51,10 @@ class WaypointRobotAgent(BaseAgent):
                 robot_name=self.robot_name, 
                 swagger_definitions=str(self.api.generate_swagger()), 
                 server_connection_string=f"http://{self.api_backend_host}:{self.api_backend_port}").generate_tool())
+
+        agent.add_tool(
+            tool=SQLGeneratorForSQLite(
+                db_connection=self.db_connection).generate_tool())
 
         return agent 
 
