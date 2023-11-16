@@ -32,8 +32,9 @@ class PythonRequestsExecutorNode(BaseComponent):
                     "results": r.json()
                 }
                 if self.train:
-                    f = open(self.data_store_path, 'a+')
-                    f.write(f"Query: \"{query}\" Code: {code} \n")
+                    f = open(self.data_store_path, 'r+')
+                    if code not in f.read():
+                        f.write(f"{code} \n")
                     f.close()
             return output, "output_1"
         except Exception as e:
@@ -64,7 +65,7 @@ class PythonRequestsGeneratorForSwaggerAPI(Tool):
             You are a python code generator. You generate python code to interact with robot {robot_name} strictly following the following Swagger API: {swagger_definitions}.
             The Python code must use the requests library to a server on hosted on {server_connection_string}.
             Generate only one executable line. Do not assign the requests command to any variables.
-            Use the following valid information to guide your code generation: 
+            The following list of python functions are valid. Use them to improve your code generation accuracy.
             {data_store}
             Query: {{query}}
             Answer: 
@@ -110,8 +111,9 @@ class SQLExecutorNode(BaseComponent):
             }
 
             if self.train:
-                f = open(self.data_store_path, 'a+')
-                f.write(f"Query: \"{query}\" Code: {code} \n")
+                f = open(self.data_store_path, 'r+')
+                if code not in f.read():
+                    f.write(f"{code} \n")
                 f.close()
             return output, "output_1"
         except Exception as e:
@@ -153,7 +155,7 @@ class SQLGeneratorForSQLite(Tool):
             prompt="""
             You are an sql code generator. You generate sql code to answer queries based on understanding the following relational database SQLite Schema: {db_schemas}.
             Do not use placeholders. Do not add comments. Only generate a single SQL Query. Do not use nested queries. Only use SELECT * in this query.
-            Use the following valid information to guide your code generation: 
+            The following list of SQL functions are valid. Use them to improve your code generation accuracy.
             {data_store}
             Query: {{query}}
             Answer: 

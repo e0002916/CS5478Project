@@ -81,4 +81,4 @@ if __name__ == "__main__":
         robot_name=sys.argv[1], db_host=sys.argv[2], db_port=int(sys.argv[3]),
         api_query_host=sys.argv[4], api_query_port=int(sys.argv[5]),
         api_backend_host=sys.argv[6], api_backend_port=int(sys.argv[7]), 
-        log_level=logging.INFO, train=False)
+        log_level=logging.INFO, train=True)

@@ -1,3 +1,2 @@
-Query: "URL for getting robot location" Code: requests.get('http://localhost:9000/location/') 
-Query: "robot MiR100_1, move to position 5,0" Code: requests.put('http://localhost:9000/move/?x=5&y=0') 
-Query: "POST request with parameters for robot MiR100_1 to move to position 5,0" Code: requests.put('http://localhost:9000/move/?x=5&y=0') 
+requests.get('http://localhost:9000/location/') 
+requests.put('http://localhost:9000/move/?x=5&y=0') 
