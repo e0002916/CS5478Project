@@ -2,6 +2,7 @@ import logging
 import json
 import threading
 import sys
+from fastapi.exceptions import HTTPException
 import uvicorn
 from fastapi.openapi.utils import get_openapi
 import pika
@@ -42,6 +43,9 @@ class DispenserRobotSwaggerAPI:
     def _init_api(self):
         @self.app.put("/dispense/")
         async def dispense(item: str):
+            allowed_items =['coke']
+            if item not in allowed_items:
+                raise HTTPException(400, detail=f"Item must be one of the following items: {allowed_items}. Please regenerate your code to fix this error.")
             message = { "item": item }
             self.dispense_channel.basic_publish(exchange='dispense', routing_key=f"dispense.{self.robot_name}", body=json.dumps(message))
             return True

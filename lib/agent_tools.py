@@ -17,14 +17,16 @@ class PythonRequestsExecutorNode(BaseComponent):
         self.train = train
 
     def run(self, query: str):
-        code = self.codegen_node(query)[0]
+        codegen = self.codegen_node(query)
+        logging.debug(codegen)
+        code = codegen[0]
 
         logging.info(f"Attempting to execute code {code}..")
         try:
             import requests
             r = eval(code)
             if r.status_code != 200:
-                error_msgs = [x['msg'] for x in r.json()['detail']]
+                error_msgs = r.json()['detail']
                 output={
                     "results": f"The server failed to return a valid response, returning {error_msgs} instead. Please regenerate the code."
                 }
@@ -85,7 +87,7 @@ class PythonRequestsGeneratorForSwaggerAPI(Tool):
         pipeline.add_node(component=node, name="prompt_node", inputs=["Query"])
 
         return Tool(name="PythonRequestsGeneratorForSwaggerAPI", pipeline_or_node=pipeline, output_variable="results",
-                    description=f"This tool generates python code that interacts with a Swagger API to control or get information about the robot {self.robot_name}. It uses the Python Requests library.")
+                    description=f"This tool interacts with a Swagger API to control or get information about the robot {self.robot_name}.")
 
 class SQLExecutorNode(BaseComponent):
     outgoing_edges = 1
@@ -94,6 +96,7 @@ class SQLExecutorNode(BaseComponent):
         self.codegen_node = codegen_node
         self.db_connection = db_connection
         self.data_store_path = data_store_path
+        open(self.data_store_path, 'x').close()
         self.train = train
 
     def run(self, query: str):
@@ -134,6 +137,7 @@ class SQLGeneratorForSQLite(Tool):
         self.API_KEY = os.environ['OPENAI_API_KEY']
         self.db_connection = db_connection
         self.data_store_path = f"data/{self.robot_name}_SQLGeneratorForSQLite.txt"
+        open(self.data_store_path, 'x').close()
         self.train = train
 
     def generate_tool(self):

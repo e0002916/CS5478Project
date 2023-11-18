@@ -40,6 +40,7 @@ class Dispenser:
         return result
 
     def _on_dispense_mq(self, channel, method_frame, header_frame, body):
+        logging.info(f"Received dispense message {body}")
         spawn = self.robot.getSelf().getPosition()
         if json.loads(body)['item'].lower() == 'coke':
             self.all_nodes.importMFNodeFromString(-1, self._generate_can_node_string(spawn[0], spawn[1], spawn[2]))

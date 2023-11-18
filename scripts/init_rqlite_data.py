@@ -17,9 +17,9 @@ try:
         cursor.execute('INSERT INTO waypoints(name, x, y, level) VALUES("dropoff", -0.00931563, 5.04191, 0)')
 
         cursor.execute('DROP TABLE IF EXISTS dispensers')
-        cursor.execute('CREATE TABLE dispenser (id integer not null primary key autoincrement, name text unique, x float, y float, z float, level integer)')
-        cursor.execute('INSERT INTO dispenser(name, x, y, z, level) VALUES("ConveyorBelt1_dispenser", -4.3, -9.57, 0.37, 0)')
-        cursor.execute('INSERT INTO dispenser(name, x, y, z, level) VALUES("ConveyorBelt2_dispenser", 0.63, -9.59, 0.37, 0)')
-        cursor.execute('INSERT INTO dispenser(name, x, y, z, level) VALUES("ConveyorBelt3_dispenser", 5.58, -9.59, 0.37, 0)')
+        cursor.execute('CREATE TABLE dispensers (id integer not null primary key autoincrement, name text unique, x float, y float, z float, level integer)')
+        cursor.execute('INSERT INTO dispensers(name, x, y, z, level) VALUES("ConveyorBelt1_dispenser", -4.3, -9.57, 0.37, 0)')
+        cursor.execute('INSERT INTO dispensers(name, x, y, z, level) VALUES("ConveyorBelt2_dispenser", 0.63, -9.59, 0.37, 0)')
+        cursor.execute('INSERT INTO dispensers(name, x, y, z, level) VALUES("ConveyorBelt3_dispenser", 5.58, -9.59, 0.37, 0)')
 finally:
     connection.close()

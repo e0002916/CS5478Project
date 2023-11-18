@@ -1,5 +1,1 @@
-SELECT * FROM waypoints WHERE name = 'dropoff' 
-SELECT x, y FROM waypoints WHERE name = 'dropoff' 
-SELECT x, y FROM waypoints WHERE name='dropoff' 
 SELECT x, y FROM waypoints WHERE name = 'dropoff'; 
-SELECT * FROM waypoints WHERE name='dropoff' 

@@ -1,4 +1,1 @@
-requests.get('http://localhost:9000/location/') 
-requests.put('http://localhost:9000/move/?x=5&y=0') 
-requests.put('http://localhost:9000/move/?x=0.0&y=0.0') 
 requests.put('http://localhost:9000/move/?x=-0.00931563&y=5.04191') 
