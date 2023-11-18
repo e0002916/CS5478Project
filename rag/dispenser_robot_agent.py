@@ -1,4 +1,6 @@
 import pyrqlite.dbapi2 as dbapi2
+from multiprocessing import Process, Queue
+import time
 import logging
 import os
 import sys
@@ -6,7 +8,7 @@ from functools import partial
 from haystack.agents import Agent 
 from haystack.nodes import PromptNode 
 from base_agent import BaseAgent 
-from agent_tools import PythonRequestsGeneratorForSwaggerAPI, SQLGeneratorForSQLite
+from agent_tools import PythonRequestsGeneratorForSwaggerAPI
 from dispenser_robot_api import DispenserRobotSwaggerAPI
 
 class DispenserRobotAgent(BaseAgent):
@@ -17,6 +19,7 @@ class DispenserRobotAgent(BaseAgent):
         logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s')
         # Decide if we valid tool executions will save and bootstrap LLM
         self.train = train
+        self.qs = Queue()
 
         # Initialize Robot Low Level Controller
         self.api = DispenserRobotSwaggerAPI(robot_name=robot_name, fastapi_host=api_backend_host, fastapi_port=api_backend_port, log_level=log_level)
@@ -41,7 +44,9 @@ class DispenserRobotAgent(BaseAgent):
         self.agent = self.setup_agent()
 
         # Run server
-        super().__init__(api_query_host, api_query_port, partial(self.query, self.agent))
+        p = Process(target=self.process_qs, args=(self.agent,))
+        p.start()
+        super().__init__(api_query_host, api_query_port, partial(self.query))
         self.api.run_server()
 
     def setup_agent(self):
@@ -57,11 +62,18 @@ class DispenserRobotAgent(BaseAgent):
 
         return agent 
 
-    def query(self, agent: Agent, q: str):
-        results = agent.run(q)
+    def process_qs(self, agent: Agent):
+        while True:
+            time.sleep(5.0)
+            if not self.qs.empty():
+                q = self.qs.get()
+                logging.info(f"Executing {q}")
+                agent.run(q)
+                # self.qs.put(q)
 
-        if 'answers' in results:
-            return {"answers": [ answer.answer for answer in results['answers'] ] }
+    def query(self, q: str):
+        self.qs.put(q)
+        return True
 
     def init_db(self):
         db_connection = dbapi2.connect(
