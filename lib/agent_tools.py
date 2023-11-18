@@ -96,7 +96,7 @@ class SQLExecutorNode(BaseComponent):
         self.codegen_node = codegen_node
         self.db_connection = db_connection
         self.data_store_path = data_store_path
-        open(self.data_store_path, 'x').close()
+        open(self.data_store_path, 'a+').close()
         self.train = train
 
     def run(self, query: str):
@@ -137,7 +137,7 @@ class SQLGeneratorForSQLite(Tool):
         self.API_KEY = os.environ['OPENAI_API_KEY']
         self.db_connection = db_connection
         self.data_store_path = f"data/{self.robot_name}_SQLGeneratorForSQLite.txt"
-        open(self.data_store_path, 'x').close()
+        open(self.data_store_path, 'a+').close()
         self.train = train
 
     def generate_tool(self):
