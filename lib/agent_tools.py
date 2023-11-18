@@ -24,8 +24,9 @@ class PythonRequestsExecutorNode(BaseComponent):
             import requests
             r = eval(code)
             if r.status_code != 200:
+                error_msgs = [x['msg'] for x in r.json()['detail']]
                 output={
-                    "results": f"The server failed to return a valid response, returning {r.json()} instead. Please regenerate the code."
+                    "results": f"The server failed to return a valid response, returning {error_msgs} instead. Please regenerate the code."
                 }
             else:
                 output={
@@ -101,7 +102,7 @@ class SQLExecutorNode(BaseComponent):
         logging.info(f"Attempting to execute code {code}..")
         try:
             with self.db_connection.cursor() as cursor:
-                cursor.execute(query)
+                cursor.execute(code)
                 results = cursor.fetchall()
                 output = ""
                 for result in results:

@@ -2,6 +2,7 @@ import logging
 import json
 import threading
 import sys
+from fastapi.exceptions import HTTPException
 import uvicorn
 from fastapi.openapi.utils import get_openapi
 import pika
@@ -48,10 +49,13 @@ class WaypointRobotSwaggerAPI:
 
     def _init_api(self):
         @self.app.put("/move/")
-        async def move(x, y, level:str = '0'):
-            message = { "x": x, "y": y, "level": level }
-            self.move_channel.basic_publish(exchange='move', routing_key=f"move.{self.robot_name}", body=json.dumps(message))
-            return True
+        async def move(x:float , y: float):
+            if  type(x) is not float or type(y) is not float:
+                raise HTTPException(status_code=400, detail=f"x, y values must be float. Please regenerate your request to use float values.")
+            else:
+                message = { "x": x, "y": y, "level": 0 }
+                self.move_channel.basic_publish(exchange='move', routing_key=f"move.{self.robot_name}", body=json.dumps(message))
+                return f"Robot {self.robot_name} is on the way to {x}, {y}."
 
         @self.app.get("/location/")
         async def location():

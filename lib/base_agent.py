@@ -13,7 +13,7 @@ class NonBlockingQueryRestAPI:
 
         @self.app.get("/query/")
         async def query(query: str):
-            self.callback(query)
+            return self.callback(query)
 
         self.proc = Process(target=uvicorn.run,
                             args=(self.app,),

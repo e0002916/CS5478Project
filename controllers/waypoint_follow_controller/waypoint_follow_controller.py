@@ -39,9 +39,12 @@ class WaypointFollower:
         logging.info(f"{self.robot.getName()} initialization complete.")
 
     def _on_move_mq(self, channel, method_frame, header_frame, body):
-        location = Location(json_str=body)
-        self.move_queue.append(location)
-        channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+        try:
+            location = Location(json_str=body)
+            self.move_queue.append(location)
+            channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+        except Exception as e:
+            logging.error(e)
 
     def _init_mq(self):
         move_channel = pika.BlockingConnection(pika.ConnectionParameters(self.mq_host, self.mq_port)).channel()

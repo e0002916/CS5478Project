@@ -65,7 +65,9 @@ class WaypointRobotAgent(BaseAgent):
 
     def query(self, agent: Agent, q: str):
         results = agent.run(q)
-        return results
+
+        if 'answers' in results:
+            return {"answers": [ answer.answer for answer in results['answers'] ] }
 
     def init_db(self):
         db_connection = dbapi2.connect(
