@@ -7,7 +7,7 @@ https://github.com/cyberbotics/webots
 https://www.rabbitmq.com/install-debian.html
 
 pip install git+https://github.com/rqlite/pyrqlite.git
-pip install fastpi farm-haystack uvicorn[standard] pika
+pip install fastpi farm-haystack uvicorn[standard] pika rasa
 ```
 
 ### Setup
