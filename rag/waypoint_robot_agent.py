@@ -1,3 +1,4 @@
+from haystack.nodes.prompt import PromptTemplate
 import pyrqlite.dbapi2 as dbapi2
 from multiprocessing import Process, Queue
 import logging
@@ -69,14 +70,36 @@ class WaypointRobotAgent(BaseAgent):
         return agent 
 
     def process_qs(self, agent: Agent):
+        prompt_template = PromptTemplate(
+            prompt="""
+            You are a query result analyser. Analyse the given query and determine if the action taken was successful or not. If successful, answer True. Otherwise, answer False. Do not return anything else.
+            Query: {query}
+            Answer: 
+            """)
+        node = PromptNode(
+            model_name_or_path="gpt-3.5-turbo-0301",
+            api_key=self.API_KEY,
+            model_kwargs={"temperature": 0.0})
+
         while True:
             time.sleep(5.0)
             if not self.qs.empty():
                 q = self.qs.get()
                 logging.info(f"Executing {q}")
-                results = agent.run(q)
-                # TODO: Success or failure
-                self.qs.put(q)
+
+                while True:
+                    try:
+                        results = agent.run(q)
+                    except Exception as e:
+                        continue
+
+                    if 'answers' in results:
+                        if results['answers']:
+                            ans = results['answers'][0]
+                            success = node.prompt(prompt_template=prompt_template, query=str(ans))
+                            logging.info(f"Results: {success}")
+                            if 'true' in str(success).lower():
+                                break
 
     def query(self, q: str):
         self.qs.put(q)
